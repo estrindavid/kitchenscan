@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# env / secrets
+.env
+.env.local
+apps/api/.env
+apps/mobile/.env
+*.pem
+*.key
+
+# build outputs
+dist/
+build/
+.turbo/
+.expo/
+web-build/
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# os/editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# generated local runtime state
+tmp/
+.cache/
+
