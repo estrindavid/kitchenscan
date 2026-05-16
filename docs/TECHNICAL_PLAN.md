@@ -60,6 +60,13 @@ Expo phone app
 - `GET /pantry/expiring` returns items expiring within a configurable day window.
 - The API keeps pantry state in memory for the demo while preserving a clean route contract for later Firestore or database persistence.
 
+## Sprint 6 Scope
+
+- Profile screen displays a live validation metrics panel.
+- Mobile reads `GET /usage/summary` through a dedicated hook.
+- Metrics include unique anonymous users, total events, scan starts, pantry saves, recipe searches, and recipe views.
+- The panel gives the pitch a quick proof-of-use artifact without adding auth or a database dependency.
+
 ## Initial Repo Structure
 
 ```text
