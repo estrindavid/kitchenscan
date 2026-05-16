@@ -9,7 +9,8 @@ export type UsageEventName =
   | 'pantry_items_saved'
   | 'recipe_search_viewed'
   | 'recipe_viewed'
-  | 'cook_mode_started';
+  | 'cook_mode_started'
+  | 'tester_feedback_submitted';
 
 const ANONYMOUS_ID_KEY = 'kitchenscan_v1_anonymous_id';
 

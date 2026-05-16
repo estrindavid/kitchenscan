@@ -1,10 +1,14 @@
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Typography, Button, Badge } from '../../components/ui';
 import { colors, spacing } from '../../components/ui/theme';
 import { usePrefsStore } from '../../stores/prefsStore';
 import { useUsageSummary } from '../../hooks/useUsageSummary';
+import { useFeedbackSummary } from '../../hooks/useFeedbackSummary';
+import { api } from '../../services/api';
+import { getAnonymousId, trackEvent } from '../../services/analytics';
 
 const SKILL_EMOJI: Record<string, string> = {
   beginner: '🍳',
@@ -21,6 +25,12 @@ export default function ProfileScreen() {
   const themeMode = usePrefsStore((s) => s.themeMode);
   const setThemeMode = usePrefsStore((s) => s.setThemeMode);
   const { data: usage } = useUsageSummary();
+  const { data: feedback, refetch: refetchFeedback } = useFeedbackSummary();
+  const [rating, setRating] = useState(5);
+  const [wouldUseAgain, setWouldUseAgain] = useState(true);
+  const [mostUseful, setMostUseful] = useState('');
+  const [friction, setFriction] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const funnel = usage?.funnel ?? {
     scan_started: 0,
@@ -28,6 +38,27 @@ export default function ProfileScreen() {
     recipe_search_viewed: 0,
     recipe_viewed: 0,
   };
+
+  async function handleSubmitFeedback() {
+    setFeedbackStatus('saving');
+    try {
+      const anonymousId = await getAnonymousId();
+      await api.post('/feedback', {
+        anonymousId,
+        rating,
+        wouldUseAgain,
+        mostUseful: mostUseful.trim() || undefined,
+        friction: friction.trim() || undefined,
+      });
+      await trackEvent('tester_feedback_submitted', { rating, wouldUseAgain });
+      setMostUseful('');
+      setFriction('');
+      setFeedbackStatus('saved');
+      void refetchFeedback();
+    } catch {
+      setFeedbackStatus('error');
+    }
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -52,6 +83,77 @@ export default function ProfileScreen() {
           <View style={styles.funnelLine} />
           <FunnelStep label="Recipes" value={funnel.recipe_search_viewed} />
         </View>
+      </Card>
+
+      {/* Tester feedback */}
+      <Card style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Typography variant="h3">Tester Feedback</Typography>
+          <Badge label={`${feedback?.averageRating ?? 0}/5 avg`} variant="success" />
+        </View>
+        <View style={styles.feedbackStats}>
+          <MetricTile label="Responses" value={feedback?.totalFeedback ?? 0} />
+          <MetricTile label="Would Use" value={feedback?.wouldUseAgainRate ?? 0} suffix="%" />
+        </View>
+        <View style={styles.ratingRow}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <Pressable
+              key={value}
+              style={[styles.ratingButton, rating === value && styles.ratingButtonSelected]}
+              onPress={() => setRating(value)}
+            >
+              <Typography
+                variant="bodyMedium"
+                color={rating === value ? '#fff' : colors.text}
+              >
+                {value}
+              </Typography>
+            </Pressable>
+          ))}
+        </View>
+        <View style={styles.choiceRow}>
+          <Pressable
+            style={[styles.choiceButton, wouldUseAgain && styles.choiceButtonSelected]}
+            onPress={() => setWouldUseAgain(true)}
+          >
+            <Typography variant="captionMedium" color={wouldUseAgain ? '#fff' : colors.text}>
+              Would use
+            </Typography>
+          </Pressable>
+          <Pressable
+            style={[styles.choiceButton, !wouldUseAgain && styles.choiceButtonSelected]}
+            onPress={() => setWouldUseAgain(false)}
+          >
+            <Typography variant="captionMedium" color={!wouldUseAgain ? '#fff' : colors.text}>
+              Not yet
+            </Typography>
+          </Pressable>
+        </View>
+        <TextInput
+          style={styles.feedbackInput}
+          value={mostUseful}
+          onChangeText={setMostUseful}
+          placeholder="Most useful part"
+          placeholderTextColor={colors.textTertiary}
+        />
+        <TextInput
+          style={styles.feedbackInput}
+          value={friction}
+          onChangeText={setFriction}
+          placeholder="What felt rough?"
+          placeholderTextColor={colors.textTertiary}
+        />
+        <Button
+          label={feedbackStatus === 'saving' ? 'Saving...' : 'Submit Feedback'}
+          onPress={handleSubmitFeedback}
+          loading={feedbackStatus === 'saving'}
+          disabled={feedbackStatus === 'saving'}
+        />
+        {feedbackStatus === 'saved' ? (
+          <Typography variant="caption" color={colors.success}>Feedback saved.</Typography>
+        ) : feedbackStatus === 'error' ? (
+          <Typography variant="caption" color={colors.danger}>Could not save feedback.</Typography>
+        ) : null}
       </Card>
 
       {/* Account info */}
@@ -155,10 +257,10 @@ export default function ProfileScreen() {
   );
 }
 
-function MetricTile({ label, value }: { label: string; value: number }) {
+function MetricTile({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
   return (
     <View style={styles.metricTile}>
-      <Typography variant="h3">{value}</Typography>
+      <Typography variant="h3">{value}{suffix}</Typography>
       <Typography variant="caption" color={colors.textSecondary}>{label}</Typography>
     </View>
   );
@@ -190,6 +292,44 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.md,
     gap: 2,
+  },
+  feedbackStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  ratingRow: { flexDirection: 'row', gap: spacing.xs },
+  ratingButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ratingButtonSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  choiceRow: { flexDirection: 'row', gap: spacing.sm },
+  choiceButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  choiceButtonSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  feedbackInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    color: colors.text,
+    backgroundColor: colors.surfaceSecondary,
   },
   funnelRow: {
     flexDirection: 'row',

@@ -7,6 +7,7 @@ export const usageEventNames = [
   'recipe_search_viewed',
   'recipe_viewed',
   'cook_mode_started',
+  'tester_feedback_submitted',
 ] as const;
 
 export type UsageEventName = typeof usageEventNames[number];

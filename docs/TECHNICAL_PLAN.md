@@ -74,6 +74,13 @@ Expo phone app
 - Manual/demo flows increment the same capture counter as camera captures.
 - The confirm screen shows the number of scanned photos before items are saved to the pantry.
 
+## Sprint 8 Scope
+
+- `POST /feedback` records anonymous tester ratings, would-use-again intent, useful moments, and friction notes.
+- `GET /feedback/summary` returns pitch-ready validation metrics: total feedback, unique testers, average rating, would-use-again count/rate, and recent responses.
+- Profile screen includes a tester-feedback panel that submits to the API and refreshes the live summary.
+- Feedback submission also records an anonymous usage event so product analytics and direct tester sentiment stay connected.
+
 ## Initial Repo Structure
 
 ```text

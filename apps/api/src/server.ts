@@ -8,6 +8,7 @@ import { extractIngredientsFromImage } from './services/ingredientExtraction';
 import { generateRecipes, getRecipeById } from './services/recipeGeneration';
 import { usageEventNames, usageEventStore } from './services/usageEvents';
 import { pantryStore } from './services/pantryStore';
+import { feedbackStore } from './services/feedbackStore';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -87,6 +88,14 @@ const expiringQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(365).optional(),
 });
 
+const feedbackSchema = z.object({
+  anonymousId: z.string().trim().min(1).max(120),
+  rating: z.number().int().min(1).max(5),
+  wouldUseAgain: z.boolean(),
+  mostUseful: z.string().trim().max(500).optional(),
+  friction: z.string().trim().max(500).optional(),
+});
+
 export async function buildApp() {
   const env = process.env.NODE_ENV ?? 'development';
 
@@ -154,6 +163,23 @@ export async function buildApp() {
 
   app.get('/usage/summary', async () => {
     return { data: usageEventStore.summary() };
+  });
+
+  app.post('/feedback', async (request, reply) => {
+    const parsed = feedbackSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Feedback requires an anonymous tester id, rating from 1-5, and wouldUseAgain.',
+        statusCode: 400,
+      });
+    }
+
+    return reply.status(201).send({ data: feedbackStore.record(parsed.data) });
+  });
+
+  app.get('/feedback/summary', async () => {
+    return { data: feedbackStore.summary() };
   });
 
   app.get('/pantry/items', async (request) => {

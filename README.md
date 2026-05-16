@@ -56,6 +56,12 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - The camera overlay and detection tray show session progress and encourage scanning multiple kitchen areas.
 - The review screen shows the number of scanned photos before saving confirmed pantry items.
 
+## Sprint 8 Tester Feedback Slice
+
+- Profile now includes a lightweight tester-feedback form for collecting pitch-ready validation.
+- API accepts `POST /feedback` and exposes `GET /feedback/summary` with response count, unique testers, average rating, and would-use-again rate.
+- Feedback is anonymous and paired with a usage event so judges can see both product behavior and direct tester sentiment.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.
