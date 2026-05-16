@@ -1,0 +1,25 @@
+{
+  "name": "kitchenscan",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scan your kitchen, build an AI pantry, and cook with what you already have.",
+  "scripts": {
+    "dev:api": "pnpm --filter @kitchenscan/api dev",
+    "dev:mobile": "pnpm --filter @kitchenscan/mobile start",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.33.0",
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "hermes-parser": "^0.34.0"
+  }
+}

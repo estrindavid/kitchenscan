@@ -20,5 +20,4 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 
 ## Repo Status
 
-This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from the earlier PantryVision prototype while building the RocketRide/Gemini workflow as new hackathon work.
-
+This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.

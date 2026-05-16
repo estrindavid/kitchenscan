@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "KitchenScan",
+    "slug": "kitchenscan",
+    "version": "1.0.0",
+    "scheme": "kitchenscan",
+    "newArchEnabled": true,
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F6E56"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "KitchenScan needs your camera to scan food items and barcodes.",
+          "microphonePermission": "KitchenScan needs your microphone for voice commands while cooking."
+        }
+      ],
+      "expo-router"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.kitchenscan.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "KitchenScan uses speech recognition for hands-free cooking.",
+        "NSPhotoLibraryUsageDescription": "KitchenScan can import food photos from your library."
+      }
+    },
+    "android": {
+      "package": "com.kitchenscan.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F6E56"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
