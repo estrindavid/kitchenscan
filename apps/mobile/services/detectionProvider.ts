@@ -1,4 +1,5 @@
 import { api } from './api';
+import { trackEvent } from './analytics';
 import type { Detection } from '@kitchenscan/shared';
 
 // ─── Response type from /detect ──────────────────────────
@@ -11,6 +12,7 @@ interface DetectApiResponse {
     modelVersion: string;
     source: 'cloud';
     imageSize: { width: number; height: number };
+    pipeline?: { usedFallback: boolean };
   };
 }
 
@@ -32,12 +34,18 @@ export class CloudDetectionProvider implements DetectionProvider {
   }
 
   async detect(imageBase64: string, width: number, height: number): Promise<Detection[]> {
+    void trackEvent('scan_started', { source: 'camera', width, height });
     const { data } = await api.post<DetectApiResponse>('/detect', {
       image: imageBase64,
       width,
       height,
       confidence: 0.45,
       maxDetections: 20,
+    });
+    void trackEvent('scan_completed', {
+      source: 'camera',
+      detectionCount: data.data.detections.length,
+      usedFallback: data.data.pipeline?.usedFallback,
     });
     return data.data.detections;
   }

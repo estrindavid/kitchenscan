@@ -46,6 +46,13 @@ Expo phone app
 - API invokes `pipelines/generate-recipes.pipe` through the RocketRide TypeScript SDK when credentials are configured.
 - Gemini produces structured recipe JSON; deterministic fallback recipes preserve the demo without live keys.
 
+## Sprint 4 Scope
+
+- `POST /usage/events` records anonymous product events from the mobile app.
+- `GET /usage/summary` returns total events, unique anonymous users, event counts, and funnel counts.
+- Mobile tracks app open, scan start/completion, manual additions, pantry saves, recipe search views, recipe views, and cook-mode starts.
+- Events are best-effort and anonymous so validation metrics never block core user workflows.
+
 ## Initial Repo Structure
 
 ```text

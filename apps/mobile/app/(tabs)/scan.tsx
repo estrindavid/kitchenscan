@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { Scanner } from '../../components/camera/Scanner';
 import { useScanStore } from '../../stores/scanStore';
 import { colors, spacing, radii } from '../../components/ui/theme';
+import { trackEvent } from '../../services/analytics';
 
 const IS_WEB = Platform.OS === 'web';
 
@@ -39,6 +40,7 @@ export default function ScanScreen() {
     const name = searchText.trim();
     if (!name) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void trackEvent('manual_item_added', { source: 'scan_tab', label: name });
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
@@ -47,11 +49,13 @@ export default function ScanScreen() {
 
   const handleSimulateScan = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    void trackEvent('scan_started', { source: 'web_demo' });
     reset();
     // Add each demo item 3 times to hit the confirm threshold
     for (const item of DEMO_ITEMS) {
       addDetections([item, item, item]);
     }
+    void trackEvent('scan_completed', { source: 'web_demo', detectionCount: DEMO_ITEMS.length });
     router.push('/confirm');
   }, [addDetections, reset, router]);
 

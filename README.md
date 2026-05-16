@@ -32,6 +32,12 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - API routes recipe generation through `pipelines/generate-recipes.pipe`, a RocketRide Gemini workflow.
 - Deterministic fallback recipes keep the demo useful before live RocketRide/Gemini credentials are configured.
 
+## Sprint 4 Usage Slice
+
+- Mobile records anonymous usage events for app open, scans, pantry saves, recipe searches, recipe views, and cook-mode starts.
+- API accepts `POST /usage/events` and exposes `GET /usage/summary` for pitch-ready validation numbers.
+- Usage tracking is intentionally anonymous and non-blocking; failed analytics requests never interrupt the demo.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.

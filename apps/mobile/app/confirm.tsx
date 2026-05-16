@@ -18,6 +18,7 @@ import { colors, spacing, radii } from '../components/ui/theme';
 import { MEASUREMENT_UNITS } from '@kitchenscan/shared';
 import type { AddPantryItemRequest } from '@kitchenscan/shared';
 import type { MeasurementUnit } from '@kitchenscan/shared';
+import { trackEvent } from '../services/analytics';
 
 // ─── Category helper ─────────────────────────────────────
 
@@ -228,6 +229,10 @@ export default function ConfirmScreen() {
 
     addBatch.mutate(requests, {
       onSuccess: () => {
+        void trackEvent('pantry_items_saved', {
+          itemCount: requests.length,
+          source: 'confirm_screen',
+        });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         reset();
         router.replace('/(tabs)/pantry');

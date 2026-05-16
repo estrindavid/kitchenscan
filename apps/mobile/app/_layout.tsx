@@ -11,6 +11,7 @@ import { useShoppingStore } from '../stores/shoppingStore';
 import { ThemeProvider } from '../components/ui/ThemeProvider';
 import { useTheme } from '../hooks/useTheme';
 import { darkColors } from '../components/ui/theme';
+import { trackEvent } from '../services/analytics';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,8 @@ export default function RootLayout() {
   const loadShopping = useShoppingStore((s) => s.load);
 
   useEffect(() => {
+    void trackEvent('app_opened', {});
+
     Promise.all([loadPrefs(), loadFavorites(), loadShopping()]).finally(() =>
       setIsReady(true),
     );

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, ScrollView, Image, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { useFavoritesStore } from '../../stores/favoritesStore';
 import { useShoppingStore } from '../../stores/shoppingStore';
 import { recipeDetailToSearchResult } from '../../hooks/useFavorites';
 import { useCookStore } from '../../stores/cookStore';
+import { trackEvent } from '../../services/analytics';
 
 const DIFFICULTY_COLOR: Record<string, 'success' | 'warning' | 'danger'> = {
   beginner: 'success',
@@ -37,6 +39,15 @@ export default function RecipeDetailScreen() {
   const addMissingFromRecipe = useShoppingStore((s) => s.addMissingFromRecipe);
 
   const startSession = useCookStore((s) => s.startSession);
+
+  useEffect(() => {
+    if (recipe?.id) {
+      void trackEvent('recipe_viewed', {
+        recipeId: recipe.id,
+        title: recipe.title,
+      });
+    }
+  }, [recipe?.id, recipe?.title]);
 
   if (recipeLoading) {
     return <RecipeDetailSkeleton />;
@@ -66,6 +77,10 @@ export default function RecipeDetailScreen() {
 
   function handleStartCooking() {
     if (!recipe) return;
+    void trackEvent('cook_mode_started', {
+      recipeId: recipe.id,
+      stepCount: recipe.steps.length,
+    });
     startSession(recipe.id, recipe.steps);
     router.push(`/cook/${recipe.id}`);
   }

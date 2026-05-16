@@ -6,6 +6,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import { z } from 'zod';
 import { extractIngredientsFromImage } from './services/ingredientExtraction';
 import { generateRecipes, getRecipeById } from './services/recipeGeneration';
+import { usageEventNames, usageEventStore } from './services/usageEvents';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -34,6 +35,12 @@ const recipeSearchQuerySchema = z.object({
   difficulty: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(50).optional(),
   offset: z.coerce.number().int().min(0).optional(),
+});
+
+const usageEventSchema = z.object({
+  anonymousId: z.string().trim().min(1).max(120),
+  eventName: z.enum(usageEventNames),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 
 export async function buildApp() {
@@ -85,6 +92,24 @@ export async function buildApp() {
         },
       },
     };
+  });
+
+  app.post('/usage/events', async (request, reply) => {
+    const parsed = usageEventSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Usage events require anonymousId and a supported eventName.',
+        statusCode: 400,
+      });
+    }
+
+    const event = usageEventStore.record(parsed.data);
+    return reply.status(201).send({ data: event });
+  });
+
+  app.get('/usage/summary', async () => {
+    return { data: usageEventStore.summary() };
   });
 
   app.post('/detect', async (request, reply) => {

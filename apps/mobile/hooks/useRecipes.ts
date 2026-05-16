@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
+import { trackEvent } from '../services/analytics';
 import type { Recipe, Ingredient } from '@kitchenscan/shared';
 import { SEED_RECIPES } from '../data/seedRecipes';
 
@@ -126,9 +127,20 @@ export function useRecipeSearch(
         const { data } = await api.get<{ data: RecipeSearchResponse }>(
           `/recipes/search?${params}`,
         );
+        void trackEvent('recipe_search_viewed', {
+          pantryItemCount: ingredientNames.length,
+          recipeCount: data.data.recipes.length,
+          source: 'api',
+        });
         return data.data;
       } catch {
-        return computeLocalMatches(ingredientNames, filters);
+        const fallback = computeLocalMatches(ingredientNames, filters);
+        void trackEvent('recipe_search_viewed', {
+          pantryItemCount: ingredientNames.length,
+          recipeCount: fallback.recipes.length,
+          source: 'local_fallback',
+        });
+        return fallback;
       }
     },
     enabled: ingredientNames.length > 0,
