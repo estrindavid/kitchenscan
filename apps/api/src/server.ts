@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { z } from 'zod';
 import { extractIngredientsFromImage } from './services/ingredientExtraction';
+import { generateRecipes, getRecipeById } from './services/recipeGeneration';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -23,6 +24,16 @@ const detectRequestSchema = z.object({
   height: z.number().int().positive().optional(),
   confidence: z.number().min(0).max(1).optional(),
   maxDetections: z.number().int().min(1).max(50).optional(),
+});
+
+const recipeSearchQuerySchema = z.object({
+  ingredients: z.string().min(1),
+  dietary: z.string().optional(),
+  maxCookTime: z.coerce.number().int().positive().optional(),
+  cuisineType: z.string().min(1).optional(),
+  difficulty: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
 });
 
 export async function buildApp() {
@@ -111,6 +122,81 @@ export async function buildApp() {
         pipeline: result.pipeline,
       },
     };
+  });
+
+  app.get('/recipes/search', async (request, reply) => {
+    const parsed = recipeSearchQuerySchema.safeParse(request.query);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'At least one pantry ingredient is required for recipe generation.',
+        statusCode: 400,
+      });
+    }
+
+    const query = parsed.data;
+    const ingredients = query.ingredients.split(',').map((ingredient) => ingredient.trim()).filter(Boolean);
+    if (ingredients.length === 0) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'At least one pantry ingredient is required for recipe generation.',
+        statusCode: 400,
+      });
+    }
+
+    const result = await generateRecipes({
+      ingredients,
+      dietary: query.dietary?.split(',').filter(Boolean),
+      maxCookTime: query.maxCookTime,
+      cuisineType: query.cuisineType,
+      difficulty: query.difficulty,
+      limit: query.limit ?? 20,
+      offset: query.offset ?? 0,
+    });
+
+    return {
+      data: {
+        recipes: result.recipes.map((recipe) => ({
+          id: recipe.id,
+          title: recipe.title,
+          description: recipe.description,
+          imageUrl: recipe.imageUrl,
+          cookTimeMinutes: recipe.cookTimeMinutes,
+          prepTimeMinutes: recipe.prepTimeMinutes,
+          totalTimeMinutes: recipe.totalTimeMinutes,
+          servings: recipe.servings,
+          difficulty: recipe.difficulty,
+          cuisineType: recipe.cuisineType,
+          mealType: recipe.mealType,
+          dietaryTags: recipe.dietaryTags,
+          allergenWarnings: recipe.allergenWarnings,
+          matchScore: recipe.matchScore,
+          matchedIngredients: recipe.matchedIngredients,
+          missingIngredients: recipe.missingIngredients,
+          totalIngredients: recipe.totalIngredients,
+          substituteCount: recipe.substituteCount,
+        })),
+        total: result.total,
+        offset: result.offset,
+        limit: result.limit,
+        pipeline: result.pipeline,
+      },
+    };
+  });
+
+  app.get('/recipes/:id', async (request, reply) => {
+    const params = request.params as { id?: string };
+    const recipe = params.id ? getRecipeById(params.id) : undefined;
+
+    if (!recipe) {
+      return reply.status(404).send({
+        error: 'Not Found',
+        message: 'Recipe detail was not generated in this session.',
+        statusCode: 404,
+      });
+    }
+
+    return { data: recipe };
   });
 
   return app;

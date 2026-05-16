@@ -25,6 +25,13 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - When local RocketRide/Gemini credentials are not configured, the API returns deterministic demo detections so the hackathon demo still works.
 - Run `pnpm --filter @kitchenscan/api check:rocketride` with `ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`, and `ROCKETRIDE_GEMINI_API_KEY` set to verify the RocketRide setup.
 
+## Sprint 3 Recipe Slice
+
+- Recipes tab calls `GET /recipes/search?ingredients=...` for pantry-aware generated recipe cards.
+- Recipe details come from `GET /recipes/:id` after a search result is generated.
+- API routes recipe generation through `pipelines/generate-recipes.pipe`, a RocketRide Gemini workflow.
+- Deterministic fallback recipes keep the demo useful before live RocketRide/Gemini credentials are configured.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.

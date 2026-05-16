@@ -39,6 +39,13 @@ Expo phone app
 - Gemini Vision returns structured ingredient candidates, which the API normalizes into mobile `Detection` objects.
 - Demo fallback detections keep the mobile scan flow usable without live cloud credentials.
 
+## Sprint 3 Scope
+
+- `GET /recipes/search` accepts pantry ingredients and returns generated recipe cards.
+- `GET /recipes/:id` returns cookable generated recipe details for cards produced in the current session.
+- API invokes `pipelines/generate-recipes.pipe` through the RocketRide TypeScript SDK when credentials are configured.
+- Gemini produces structured recipe JSON; deterministic fallback recipes preserve the demo without live keys.
+
 ## Initial Repo Structure
 
 ```text
