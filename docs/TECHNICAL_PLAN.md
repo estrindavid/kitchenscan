@@ -81,6 +81,13 @@ Expo phone app
 - Profile screen includes a tester-feedback panel that submits to the API and refreshes the live summary.
 - Feedback submission also records an anonymous usage event so product analytics and direct tester sentiment stay connected.
 
+## Sprint 9 Scope
+
+- `GET /impact/summary` combines pantry state, expiring items, usage funnel metrics, and feedback sentiment.
+- The API computes estimated meals available, expiring meals/items to rescue, estimated grocery savings, scan-to-recipe conversion, recipe-view rate, and validation readiness.
+- Profile screen includes an Impact Snapshot card that refreshes live and gives the presentation one concise proof-of-impact surface.
+- Calculations are intentionally transparent heuristic estimates for the hackathon demo, not financial or nutrition guarantees.
+
 ## Initial Repo Structure
 
 ```text

@@ -7,6 +7,7 @@ import { colors, spacing } from '../../components/ui/theme';
 import { usePrefsStore } from '../../stores/prefsStore';
 import { useUsageSummary } from '../../hooks/useUsageSummary';
 import { useFeedbackSummary } from '../../hooks/useFeedbackSummary';
+import { useImpactSummary } from '../../hooks/useImpactSummary';
 import { api } from '../../services/api';
 import { getAnonymousId, trackEvent } from '../../services/analytics';
 
@@ -26,6 +27,7 @@ export default function ProfileScreen() {
   const setThemeMode = usePrefsStore((s) => s.setThemeMode);
   const { data: usage } = useUsageSummary();
   const { data: feedback, refetch: refetchFeedback } = useFeedbackSummary();
+  const { data: impact } = useImpactSummary();
   const [rating, setRating] = useState(5);
   const [wouldUseAgain, setWouldUseAgain] = useState(true);
   const [mostUseful, setMostUseful] = useState('');
@@ -63,6 +65,33 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Typography variant="h2">Profile</Typography>
+
+      {/* Impact snapshot */}
+      <Card style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Typography variant="h3">Impact Snapshot</Typography>
+          <Badge
+            label={readinessLabel(impact?.validationReadiness ?? 'needs_testers')}
+            variant={readinessVariant(impact?.validationReadiness ?? 'needs_testers')}
+          />
+        </View>
+        <View style={styles.metricGrid}>
+          <MetricTile label="Meals" value={impact?.estimatedMealsAvailable ?? 0} />
+          <MetricTile label="Rescue" value={impact?.estimatedMealsRescuable ?? 0} />
+          <MetricTile label="Savings" value={impact?.estimatedGrocerySavingsDollars ?? 0} prefix="$" />
+          <MetricTile label="Scan to Recipe" value={impact?.scanToRecipeConversionRate ?? 0} suffix="%" />
+        </View>
+        <View style={styles.impactHighlights}>
+          {(impact?.highlights ?? ['Scan pantry items to unlock meal and savings estimates.']).slice(0, 3).map((highlight) => (
+            <View key={highlight} style={styles.impactHighlightRow}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+              <Typography variant="caption" color={colors.textSecondary} style={styles.impactHighlightText}>
+                {highlight}
+              </Typography>
+            </View>
+          ))}
+        </View>
+      </Card>
 
       {/* Validation metrics */}
       <Card style={styles.section}>
@@ -257,13 +286,35 @@ export default function ProfileScreen() {
   );
 }
 
-function MetricTile({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
+function MetricTile({
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+}: {
+  label: string;
+  value: number;
+  prefix?: string;
+  suffix?: string;
+}) {
   return (
     <View style={styles.metricTile}>
-      <Typography variant="h3">{value}{suffix}</Typography>
+      <Typography variant="h3">{prefix}{value}{suffix}</Typography>
       <Typography variant="caption" color={colors.textSecondary}>{label}</Typography>
     </View>
   );
+}
+
+function readinessLabel(readiness: 'needs_testers' | 'promising' | 'demo_ready') {
+  if (readiness === 'demo_ready') return 'Demo ready';
+  if (readiness === 'promising') return 'Promising';
+  return 'Needs testers';
+}
+
+function readinessVariant(readiness: 'needs_testers' | 'promising' | 'demo_ready') {
+  if (readiness === 'demo_ready') return 'success';
+  if (readiness === 'promising') return 'primary';
+  return 'warning';
 }
 
 function FunnelStep({ label, value }: { label: string; value: number }) {
@@ -293,6 +344,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 2,
   },
+  impactHighlights: { gap: spacing.xs },
+  impactHighlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
+  impactHighlightText: { flex: 1 },
   feedbackStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   ratingRow: { flexDirection: 'row', gap: spacing.xs },
   ratingButton: {

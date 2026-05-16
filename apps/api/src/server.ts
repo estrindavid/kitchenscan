@@ -9,6 +9,7 @@ import { generateRecipes, getRecipeById } from './services/recipeGeneration';
 import { usageEventNames, usageEventStore } from './services/usageEvents';
 import { pantryStore } from './services/pantryStore';
 import { feedbackStore } from './services/feedbackStore';
+import { createImpactSummary } from './services/impactSummary';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -180,6 +181,17 @@ export async function buildApp() {
 
   app.get('/feedback/summary', async () => {
     return { data: feedbackStore.summary() };
+  });
+
+  app.get('/impact/summary', async () => {
+    return {
+      data: createImpactSummary({
+        totalPantryItems: pantryStore.summary().totalItems,
+        expiringItemCount: pantryStore.expiring(3).length,
+        usage: usageEventStore.summary(),
+        feedback: feedbackStore.summary(),
+      }),
+    };
   });
 
   app.get('/pantry/items', async (request) => {

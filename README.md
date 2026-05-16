@@ -62,6 +62,12 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - API accepts `POST /feedback` and exposes `GET /feedback/summary` with response count, unique testers, average rating, and would-use-again rate.
 - Feedback is anonymous and paired with a usage event so judges can see both product behavior and direct tester sentiment.
 
+## Sprint 9 Impact Snapshot Slice
+
+- API exposes `GET /impact/summary`, combining pantry, usage, and feedback data into one judge-friendly impact summary.
+- Profile now shows meals unlocked, expiring items to rescue, estimated grocery savings, scan-to-recipe conversion, and impact highlights.
+- The snapshot turns KitchenScan's core value into pitch-ready proof: less food waste, more meals from what users already own, and real tester signal.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.
