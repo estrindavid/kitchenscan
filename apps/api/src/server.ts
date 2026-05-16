@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { extractIngredientsFromImage } from './services/ingredientExtraction';
 import { generateRecipes, getRecipeById } from './services/recipeGeneration';
 import { usageEventNames, usageEventStore } from './services/usageEvents';
+import { pantryStore } from './services/pantryStore';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -41,6 +42,49 @@ const usageEventSchema = z.object({
   anonymousId: z.string().trim().min(1).max(120),
   eventName: z.enum(usageEventNames),
   properties: z.record(z.string(), z.unknown()).optional(),
+});
+
+const addPantryItemSchema = z.object({
+  name: z.string().trim().min(1),
+  displayName: z.string().trim().min(1).optional(),
+  category: z.string().trim().min(1),
+  subcategory: z.string().trim().min(1).optional(),
+  quantity: z.number().positive().optional(),
+  unit: z.string().trim().min(1).optional(),
+  detectionSource: z.enum(['camera_vision', 'barcode_scan', 'manual_entry', 'receipt_ocr']).optional(),
+  confidenceScore: z.number().min(0).max(1).optional(),
+  barcode: z.string().trim().min(1).optional(),
+  brand: z.string().trim().min(1).optional(),
+  imageUrl: z.string().trim().min(1).optional(),
+  expiryDate: z.string().trim().min(1).optional(),
+  nutritionPer100g: z.object({
+    calories: z.number(),
+    protein: z.number(),
+    fat: z.number(),
+    carbs: z.number(),
+    fiber: z.number(),
+    sodium: z.number(),
+  }).optional(),
+});
+
+const updatePantryItemSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  quantity: z.number().positive().optional(),
+  unit: z.string().trim().min(1).optional(),
+  status: z.enum(['fresh', 'expiring_soon', 'expired', 'used_up']).optional(),
+  expiryDate: z.string().trim().min(1).optional(),
+});
+
+const pantryListQuerySchema = z.object({
+  category: z.string().trim().min(1).optional(),
+  status: z.string().trim().min(1).optional(),
+  sort: z.enum(['expiry', 'category', 'added', 'name']).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+const expiringQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).optional(),
 });
 
 export async function buildApp() {
@@ -110,6 +154,101 @@ export async function buildApp() {
 
   app.get('/usage/summary', async () => {
     return { data: usageEventStore.summary() };
+  });
+
+  app.get('/pantry/items', async (request) => {
+    const query = pantryListQuerySchema.parse(request.query);
+    const filters = {
+      category: query.category,
+      status: query.status,
+      sort: query.sort,
+      limit: query.limit ?? 100,
+      offset: query.offset ?? 0,
+    };
+
+    return {
+      data: pantryStore.list(filters),
+      meta: {
+        total: pantryStore.count(filters),
+        limit: filters.limit,
+        offset: filters.offset,
+      },
+    };
+  });
+
+  app.post('/pantry/items', async (request, reply) => {
+    const parsed = addPantryItemSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Pantry items require a name, category, and positive quantity when provided.',
+        statusCode: 400,
+      });
+    }
+
+    return reply.status(201).send({ data: pantryStore.add(parsed.data) });
+  });
+
+  app.post('/pantry/items/batch', async (request, reply) => {
+    const parsed = z.array(addPantryItemSchema).min(1).safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Batch pantry add requires at least one valid pantry item.',
+        statusCode: 400,
+      });
+    }
+
+    const items = pantryStore.addBatch(parsed.data);
+    return reply.status(201).send({
+      data: items,
+      meta: { count: items.length },
+    });
+  });
+
+  app.get('/pantry/summary', async () => {
+    return { data: pantryStore.summary() };
+  });
+
+  app.get('/pantry/expiring', async (request) => {
+    const query = expiringQuerySchema.parse(request.query);
+    return { data: pantryStore.expiring(query.days ?? 3) };
+  });
+
+  app.patch('/pantry/items/:id', async (request, reply) => {
+    const params = request.params as { id?: string };
+    const parsed = updatePantryItemSchema.safeParse(request.body);
+    if (!params.id || !parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'A valid pantry item update is required.',
+        statusCode: 400,
+      });
+    }
+
+    const updated = pantryStore.update(params.id, parsed.data);
+    if (!updated) {
+      return reply.status(404).send({
+        error: 'Not Found',
+        message: 'Pantry item was not found.',
+        statusCode: 404,
+      });
+    }
+
+    return { data: updated };
+  });
+
+  app.delete('/pantry/items/:id', async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id || !pantryStore.delete(params.id)) {
+      return reply.status(404).send({
+        error: 'Not Found',
+        message: 'Pantry item was not found.',
+        statusCode: 404,
+      });
+    }
+
+    return reply.status(204).send();
   });
 
   app.post('/detect', async (request, reply) => {

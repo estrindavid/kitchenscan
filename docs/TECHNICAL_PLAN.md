@@ -53,6 +53,13 @@ Expo phone app
 - Mobile tracks app open, scan start/completion, manual additions, pantry saves, recipe search views, recipe views, and cook-mode starts.
 - Events are best-effort and anonymous so validation metrics never block core user workflows.
 
+## Sprint 5 Scope
+
+- `GET /pantry/items`, `POST /pantry/items`, `POST /pantry/items/batch`, `PATCH /pantry/items/:id`, and `DELETE /pantry/items/:id` support local-first sync.
+- `GET /pantry/summary` returns category counts and expiring counts for the pantry tab.
+- `GET /pantry/expiring` returns items expiring within a configurable day window.
+- The API keeps pantry state in memory for the demo while preserving a clean route contract for later Firestore or database persistence.
+
 ## Initial Repo Structure
 
 ```text

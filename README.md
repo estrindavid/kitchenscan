@@ -38,6 +38,12 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - API accepts `POST /usage/events` and exposes `GET /usage/summary` for pitch-ready validation numbers.
 - Usage tracking is intentionally anonymous and non-blocking; failed analytics requests never interrupt the demo.
 
+## Sprint 5 Pantry Slice
+
+- API now supports the mobile app's local-first pantry sync routes: list, add, batch add, update, delete, summary, and expiring items.
+- Pantry storage is in-memory for hackathon speed, with response shapes matching the existing Expo hooks.
+- Confirmed scan items can sync to the API instead of relying only on local fallback storage.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.
