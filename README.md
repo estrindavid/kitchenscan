@@ -50,6 +50,12 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - The panel shows unique users, total events, scan starts, pantry saves, and recipe views for the pitch.
 - Metrics refresh automatically while the app is open.
 
+## Sprint 7 Multi-Photo Scan Slice
+
+- Scan sessions now track how many photos/captures have been added before review.
+- The camera overlay and detection tray show session progress and encourage scanning multiple kitchen areas.
+- The review screen shows the number of scanned photos before saving confirmed pantry items.
+
 ## Repo Status
 
 This repo is intentionally fresh for the hackathon. The implementation will reuse patterns from an earlier personal cooking-app prototype while building the RocketRide/Gemini workflow as new hackathon work.

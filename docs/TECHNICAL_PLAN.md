@@ -67,6 +67,13 @@ Expo phone app
 - Metrics include unique anonymous users, total events, scan starts, pantry saves, recipe searches, and recipe views.
 - The panel gives the pitch a quick proof-of-use artifact without adding auth or a database dependency.
 
+## Sprint 7 Scope
+
+- Scan store tracks scan-session captures with `scanAttempts` and a session start timestamp.
+- Camera overlay and detection tray expose photo count and item count so multi-photo scanning is visible.
+- Manual/demo flows increment the same capture counter as camera captures.
+- The confirm screen shows the number of scanned photos before items are saved to the pantry.
+
 ## Initial Repo Structure
 
 ```text

@@ -6,6 +6,7 @@ import type { ScannedItem } from '../../stores/scanStore';
 
 interface DetectionTrayProps {
   items: ScannedItem[];
+  photoCount: number;
   onRemove: (id: string) => void;
   onUpdateQuantity: (id: string, qty: number) => void;
   onConfirmAll: () => void;
@@ -14,6 +15,7 @@ interface DetectionTrayProps {
 
 export function DetectionTray({
   items,
+  photoCount,
   onRemove,
   onUpdateQuantity,
   onConfirmAll,
@@ -40,9 +42,10 @@ export function DetectionTray({
       {/* Header row */}
       <View style={styles.header}>
         <Typography variant="bodyMedium" color="#fff">
-          Detected Items
+          Scan Session
         </Typography>
         <View style={styles.headerBadges}>
+          <Badge label={`${photoCount} photo${photoCount === 1 ? '' : 's'}`} />
           {confirmedItems.length > 0 && (
             <Badge label={`${confirmedItems.length} ready`} variant="success" />
           )}
@@ -116,6 +119,9 @@ export function DetectionTray({
 
       {/* Action row */}
       <View style={styles.actions}>
+        <Typography variant="caption" color="rgba(255,255,255,0.55)" style={styles.sessionHint}>
+          Capture another photo before saving to scan the whole kitchen.
+        </Typography>
         {pendingItems.length > 0 && (
           <Button
             label="Confirm All"
@@ -209,9 +215,14 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
+  },
+  sessionHint: {
+    flex: 1,
+    lineHeight: 16,
   },
   emptyContainer: {
     position: 'absolute',

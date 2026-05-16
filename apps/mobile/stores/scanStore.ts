@@ -28,6 +28,7 @@ interface ScanState {
   scanStatus: ScanStatus;
   lastError: string | null;
   scanAttempts: number;
+  sessionStartedAt: number | null;
 
   /**
    * Add a batch of raw detections. Detections are aggregated by label
@@ -36,6 +37,7 @@ interface ScanState {
   addDetections: (detections: RawDetection[]) => void;
   /** Convenience wrapper for a single detection (used by legacy callers). */
   addDetection: (detection: RawDetection) => void;
+  recordCapture: (count?: number) => void;
   removeItem: (id: string) => void;
   updateItem: (id: string, updates: Partial<ScannedItem>) => void;
   confirmAll: () => void;
@@ -73,6 +75,7 @@ export const useScanStore = create<ScanState>((set) => ({
   scanStatus: 'idle',
   lastError: null,
   scanAttempts: 0,
+  sessionStartedAt: null,
 
   addDetections: (rawDetections) => {
     set((state) => {
@@ -138,6 +141,12 @@ export const useScanStore = create<ScanState>((set) => ({
     });
   },
 
+  recordCapture: (count = 1) =>
+    set((s) => ({
+      scanAttempts: s.scanAttempts + count,
+      sessionStartedAt: s.sessionStartedAt ?? Date.now(),
+    })),
+
   removeItem: (id) =>
     set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
 
@@ -159,10 +168,18 @@ export const useScanStore = create<ScanState>((set) => ({
     set((s) => ({
       scanStatus,
       scanAttempts: scanStatus === 'processing' ? s.scanAttempts + 1 : s.scanAttempts,
+      sessionStartedAt: scanStatus === 'processing' ? s.sessionStartedAt ?? Date.now() : s.sessionStartedAt,
     })),
 
   setLastError: (lastError) => set({ lastError }),
 
   reset: () =>
-    set({ items: [], isScanning: false, scanStatus: 'idle', lastError: null, scanAttempts: 0 }),
+    set({
+      items: [],
+      isScanning: false,
+      scanStatus: 'idle',
+      lastError: null,
+      scanAttempts: 0,
+      sessionStartedAt: null,
+    }),
 }));

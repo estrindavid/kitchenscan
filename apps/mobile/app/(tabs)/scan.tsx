@@ -27,7 +27,7 @@ const DEMO_ITEMS = [
 
 export default function ScanScreen() {
   const router = useRouter();
-  const { items, addDetection, addDetections, reset } = useScanStore();
+  const { items, addDetection, addDetections, reset, recordCapture, scanAttempts } = useScanStore();
   const [searchText, setSearchText] = useState('');
 
   const handleAddToPantry = useCallback(() => {
@@ -41,23 +41,25 @@ export default function ScanScreen() {
     if (!name) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     void trackEvent('manual_item_added', { source: 'scan_tab', label: name });
+    recordCapture();
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
     addDetection({ label: name, confidence: 1.0, boundingBox: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 } });
     setSearchText('');
-  }, [searchText, addDetection]);
+  }, [searchText, addDetection, recordCapture]);
 
   const handleSimulateScan = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     void trackEvent('scan_started', { source: 'web_demo' });
     reset();
+    recordCapture(3);
     // Add each demo item 3 times to hit the confirm threshold
     for (const item of DEMO_ITEMS) {
       addDetections([item, item, item]);
     }
     void trackEvent('scan_completed', { source: 'web_demo', detectionCount: DEMO_ITEMS.length });
     router.push('/confirm');
-  }, [addDetections, reset, router]);
+  }, [addDetections, reset, recordCapture, router]);
 
   if (IS_WEB) {
     return (
@@ -71,6 +73,14 @@ export default function ScanScreen() {
         </View>
         <ScrollView contentContainerStyle={styles.demoBody}>
           <Text style={styles.demoSectionLabel}>SIMULATED DETECTIONS</Text>
+          <View style={styles.sessionSummary}>
+            <Text style={styles.sessionSummaryText}>
+              Session: {scanAttempts} photo{scanAttempts === 1 ? '' : 's'} captured
+            </Text>
+            <Text style={styles.sessionSummarySubtext}>
+              Capture several shelves, counters, or fridge angles before reviewing.
+            </Text>
+          </View>
           {DEMO_ITEMS.map((item) => (
             <View key={item.label} style={styles.demoItemRow}>
               <Text style={styles.demoItemName}>{item.label}</Text>
@@ -204,6 +214,24 @@ const styles = StyleSheet.create({
   demoItemConfidence: {
     fontSize: 13,
     color: colors.success,
+  },
+  sessionSummary: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: 4,
+  },
+  sessionSummaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  sessionSummarySubtext: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 16,
   },
   simulateBtn: {
     backgroundColor: colors.primary,

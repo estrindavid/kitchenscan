@@ -39,7 +39,7 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
 
   const {
     items, isScanning, addDetections, removeItem, updateItem, confirmAll,
-    setScanning, scanStatus, setScanStatus, setLastError,
+    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts,
   } = useScanStore();
   const addItem = useAddPantryItem();
 
@@ -175,6 +175,8 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
       />
       <ScannerOverlay
         scanStatus={scanStatus}
+        photoCount={scanAttempts}
+        itemCount={items.length}
         onCapture={handleCapture}
         onRetry={() => setScanStatus('idle')}
       />
@@ -187,6 +189,7 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
       />
       <DetectionTray
         items={items}
+        photoCount={scanAttempts}
         onRemove={removeItem}
         onUpdateQuantity={(id, qty) => updateItem(id, { quantity: qty })}
         onConfirmAll={confirmAll}
@@ -216,7 +219,7 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
 
   const {
     items, addDetections, removeItem, updateItem, confirmAll,
-    setScanning, scanStatus, setScanStatus, setLastError,
+    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts,
   } = useScanStore();
   const addItem = useAddPantryItem();
 
@@ -313,6 +316,8 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
       />
       <ScannerOverlay
         scanStatus={scanStatus}
+        photoCount={scanAttempts}
+        itemCount={items.length}
         onCapture={handleCapture}
         onRetry={() => setScanStatus('idle')}
       />
@@ -325,6 +330,7 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
       />
       <DetectionTray
         items={items}
+        photoCount={scanAttempts}
         onRemove={removeItem}
         onUpdateQuantity={(id, qty) => updateItem(id, { quantity: qty })}
         onConfirmAll={confirmAll}

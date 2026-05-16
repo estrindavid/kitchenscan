@@ -12,6 +12,8 @@ interface ScannerOverlayProps {
   scanStatus: ScanStatus;
   onRetry?: () => void;
   onCapture?: () => void;
+  photoCount?: number;
+  itemCount?: number;
 }
 
 const STATUS_CONFIG: Record<
@@ -20,12 +22,18 @@ const STATUS_CONFIG: Record<
 > = {
   idle:       { message: 'Tap Capture to scan food items',                         showSpinner: false, dotColor: '#888' },
   processing: { message: 'Identifying items…',                                     showSpinner: true,  dotColor: colors.warning },
-  detected:   { message: '',                                                        showSpinner: false, dotColor: colors.primary },
+  detected:   { message: 'Items found — capture another photo or review below',     showSpinner: false, dotColor: colors.primary },
   empty:      { message: 'Nothing found — try a different angle or add manually',  showSpinner: false, dotColor: '#888' },
   error:      { message: 'Could not reach detection service — add items manually', showSpinner: false, dotColor: colors.danger },
 };
 
-export function ScannerOverlay({ scanStatus, onRetry, onCapture }: ScannerOverlayProps) {
+export function ScannerOverlay({
+  scanStatus,
+  onRetry,
+  onCapture,
+  photoCount = 0,
+  itemCount = 0,
+}: ScannerOverlayProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const config = STATUS_CONFIG[scanStatus];
 
@@ -64,6 +72,13 @@ export function ScannerOverlay({ scanStatus, onRetry, onCapture }: ScannerOverla
         <View style={[styles.statusDot, { backgroundColor: config.dotColor }]} />
       </View>
 
+      {/* Session progress */}
+      <View style={styles.sessionContainer} pointerEvents="none">
+        <Typography variant="captionMedium" color="#fff">
+          {photoCount} photo{photoCount === 1 ? '' : 's'} · {itemCount} item{itemCount === 1 ? '' : 's'}
+        </Typography>
+      </View>
+
       {/* Spinner (processing) */}
       {config.showSpinner && (
         <View style={styles.spinnerContainer} pointerEvents="none">
@@ -92,7 +107,7 @@ export function ScannerOverlay({ scanStatus, onRetry, onCapture }: ScannerOverla
       )}
 
       {/* Capture button (idle / empty states) */}
-      {(scanStatus === 'idle' || scanStatus === 'empty') && onCapture && (
+      {(scanStatus === 'idle' || scanStatus === 'empty' || scanStatus === 'detected') && onCapture && (
         <View style={styles.captureContainer} pointerEvents="box-none">
           <TouchableOpacity style={styles.captureBtn} onPress={onCapture}>
             <View style={styles.captureInner} />
@@ -139,6 +154,15 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  sessionContainer: {
+    position: 'absolute',
+    top: 14,
+    left: 16,
+    backgroundColor: 'rgba(0,0,0,0.48)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   spinnerContainer: {
     position: 'absolute',

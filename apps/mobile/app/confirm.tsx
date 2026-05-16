@@ -199,7 +199,7 @@ function EditableItemRow({
 
 export default function ConfirmScreen() {
   const router = useRouter();
-  const { items, removeItem, updateItem, reset } = useScanStore();
+  const { items, removeItem, updateItem, reset, scanAttempts } = useScanStore();
   const addBatch = useAddPantryItemsBatch();
 
   const confirmedItems = items.filter((i) => i.confirmed);
@@ -249,7 +249,12 @@ export default function ConfirmScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
           <Typography variant="bodyMedium" color={colors.primary}>← Back</Typography>
         </Pressable>
-        <Typography variant="h3">Review Items</Typography>
+        <View style={styles.headerCenter}>
+          <Typography variant="h3">Review Items</Typography>
+          <Typography variant="caption" color={colors.textTertiary}>
+            {scanAttempts} photo{scanAttempts === 1 ? '' : 's'} scanned
+          </Typography>
+        </View>
         <Badge label={`${confirmedItems.length}`} variant="primary" />
       </View>
 
@@ -331,6 +336,10 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     minWidth: 70,
+  },
+  headerCenter: {
+    alignItems: 'center',
+    gap: 2,
   },
   list: {
     padding: spacing.lg,
