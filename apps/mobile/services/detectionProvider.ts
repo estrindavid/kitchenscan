@@ -31,9 +31,11 @@ export class CloudDetectionProvider implements DetectionProvider {
     return true;
   }
 
-  async detect(imageBase64: string, _width: number, _height: number): Promise<Detection[]> {
+  async detect(imageBase64: string, width: number, height: number): Promise<Detection[]> {
     const { data } = await api.post<DetectApiResponse>('/detect', {
       image: imageBase64,
+      width,
+      height,
       confidence: 0.45,
       maxDetections: 20,
     });

@@ -13,10 +13,17 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 
 1. Capture fridge, pantry, freezer, or counter photos.
 2. Send photos to the API.
-3. API invokes RocketRide ingredient extraction pipeline.
+3. API invokes the RocketRide ingredient extraction pipeline.
 4. User reviews and saves pantry items.
 5. API invokes RocketRide recipe generation pipeline.
 6. User cooks from generated recipe steps.
+
+## Sprint 2 Demo Slice
+
+- Mobile scanner posts captured image data and frame dimensions to `POST /detect`.
+- API routes the scan through `pipelines/extract-ingredients.pipe`, a RocketRide Gemini Vision workflow.
+- When local RocketRide/Gemini credentials are not configured, the API returns deterministic demo detections so the hackathon demo still works.
+- Run `pnpm --filter @kitchenscan/api check:rocketride` with `ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`, and `ROCKETRIDE_GEMINI_API_KEY` set to verify the RocketRide setup.
 
 ## Repo Status
 

@@ -3,6 +3,8 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import { z } from 'zod';
+import { extractIngredientsFromImage } from './services/ingredientExtraction';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -14,6 +16,14 @@ const envToLogger: Record<string, object | boolean> = {
   production: true,
   test: false,
 };
+
+const detectRequestSchema = z.object({
+  image: z.string().min(1),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  maxDetections: z.number().int().min(1).max(50).optional(),
+});
 
 export async function buildApp() {
   const env = process.env.NODE_ENV ?? 'development';
@@ -66,7 +76,49 @@ export async function buildApp() {
     };
   });
 
+  app.post('/detect', async (request, reply) => {
+    const parsed = detectRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'A base64 image is required for ingredient detection.',
+        statusCode: 400,
+      });
+    }
+
+    const startedAt = Date.now();
+    const input = parsed.data;
+    const imageSize = {
+      width: input.width ?? 1024,
+      height: input.height ?? 768,
+    };
+
+    const result = await extractIngredientsFromImage({
+      image: stripDataUriPrefix(input.image),
+      imageSize,
+      minConfidence: input.confidence ?? 0.45,
+      maxDetections: input.maxDetections ?? 20,
+    });
+
+    return {
+      data: {
+        detections: result.detections,
+        count: result.detections.length,
+        latencyMs: Date.now() - startedAt,
+        modelVersion: result.modelVersion,
+        source: 'cloud' as const,
+        imageSize,
+        pipeline: result.pipeline,
+      },
+    };
+  });
+
   return app;
+}
+
+function stripDataUriPrefix(image: string) {
+  const commaIndex = image.indexOf(',');
+  return commaIndex >= 0 ? image.slice(commaIndex + 1) : image;
 }
 
 async function start() {

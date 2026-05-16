@@ -32,6 +32,13 @@ Expo phone app
 - Use Gemini / Google Cloud for the core AI.
 - Deploy or expose a working demo and collect at least five real users.
 
+## Sprint 2 Scope
+
+- `POST /detect` accepts a base64 image plus optional frame dimensions.
+- API invokes `pipelines/extract-ingredients.pipe` through the RocketRide TypeScript SDK when credentials are configured.
+- Gemini Vision returns structured ingredient candidates, which the API normalizes into mobile `Detection` objects.
+- Demo fallback detections keep the mobile scan flow usable without live cloud credentials.
+
 ## Initial Repo Structure
 
 ```text
@@ -44,4 +51,3 @@ pipelines/
 docs/
 scripts/
 ```
-
