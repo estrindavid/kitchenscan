@@ -8,6 +8,18 @@
         "mode": "Source",
         "parameters": {},
         "type": "webhook"
+      },
+      "ui": {
+        "position": {
+          "x": 20,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 154
+        },
+        "nodeType": "default",
+        "formDataValid": true
       }
     },
     {
@@ -21,7 +33,24 @@
           "prompt": "Find visible food ingredients in this image. Return JSON with this exact shape: {\"ingredients\":[{\"name\":\"ingredient name\",\"category\":\"produce|protein|dairy|grains|canned|frozen|condiments|spices|snacks|beverages|baking|other\",\"confidence\":0.0,\"boundingBox\":{\"x\":0.0,\"y\":0.0,\"width\":0.0,\"height\":0.0}}]}. Bounding boxes must be relative 0 to 1 values."
         }
       },
-      "input": [{ "lane": "image", "from": "webhook_1" }]
+      "ui": {
+        "position": {
+          "x": 240,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 84
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "image",
+          "from": "webhook_1"
+        }
+      ]
     },
     {
       "id": "response_text_1",
@@ -29,10 +58,33 @@
       "config": {
         "laneName": "text"
       },
-      "input": [{ "lane": "text", "from": "image_vision_gemini_1" }]
+      "ui": {
+        "position": {
+          "x": 460,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "text",
+          "from": "image_vision_gemini_1"
+        }
+      ]
     }
   ],
+  "source": "webhook_1",
   "project_id": "90bb0484-522b-4ffd-a8b9-2031080d0cf9",
-  "viewport": { "x": 0, "y": 0, "zoom": 1 },
-  "version": 1
+  "viewport": {
+    "x": 120,
+    "y": 120,
+    "zoom": 0.95
+  },
+  "version": 1,
+  "docRevision": 1
 }

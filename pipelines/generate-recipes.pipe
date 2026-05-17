@@ -8,7 +8,48 @@
         "mode": "Source",
         "parameters": {},
         "type": "webhook"
+      },
+      "ui": {
+        "position": {
+          "x": 20,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 154
+        },
+        "nodeType": "default",
+        "formDataValid": true
       }
+    },
+    {
+      "id": "prompt_1",
+      "provider": "prompt",
+      "config": {
+        "instructions": [
+          "You are KitchenScan's recipe planner. Use only the confirmed pantry ingredients in the user question as the core recipe inputs.",
+          "Return concise, practical recipes that a student or busy household could cook tonight.",
+          "Return only valid JSON. Do not include markdown, commentary, or prose outside the JSON object."
+        ]
+      },
+      "ui": {
+        "position": {
+          "x": 240,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "webhook_1"
+        }
+      ]
     },
     {
       "id": "llm_gemini_1",
@@ -20,10 +61,22 @@
           "modelSource": "google"
         }
       },
+      "ui": {
+        "position": {
+          "x": 460,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
       "input": [
         {
           "lane": "questions",
-          "from": "webhook_1"
+          "from": "prompt_1"
         }
       ]
     },
@@ -33,6 +86,18 @@
       "config": {
         "laneName": "answers"
       },
+      "ui": {
+        "position": {
+          "x": 680,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
       "input": [
         {
           "lane": "answers",
@@ -41,11 +106,13 @@
       ]
     }
   ],
+  "source": "webhook_1",
   "project_id": "1a2ed342-e645-4e0b-989b-ffdc5d10cf8d",
   "viewport": {
-    "x": 0,
-    "y": 0,
-    "zoom": 1
+    "x": 80,
+    "y": 120,
+    "zoom": 0.9
   },
-  "version": 1
+  "version": 1,
+  "docRevision": 1
 }

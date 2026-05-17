@@ -12,7 +12,7 @@ KitchenScan has two RocketRide workflow files:
   - Gemini profile: `gemini-2_5-flash`
 
 - `pipelines/generate-recipes.pipe`
-  - Flow: `webhook -> llm_gemini -> response_answers`
+  - Flow: `webhook -> prompt -> llm_gemini -> response_answers`
   - Purpose: turn confirmed pantry ingredients into structured recipe JSON.
   - Gemini profile: `gemini-2_5-flash`
 

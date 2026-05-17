@@ -13,7 +13,7 @@ const checks = [
   }),
   checkPipeline({
     file: 'pipelines/generate-recipes.pipe',
-    providers: ['webhook', 'llm_gemini', 'response_answers'],
+    providers: ['webhook', 'prompt', 'llm_gemini', 'response_answers'],
     profile: 'gemini-2_5-flash',
     envReference: '${ROCKETRIDE_GEMINI_API_KEY}',
   }),
