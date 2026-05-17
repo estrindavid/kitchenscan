@@ -6,6 +6,7 @@
   "scripts": {
     "dev:api": "pnpm --filter @kitchenscan/api dev",
     "dev:mobile": "pnpm --filter @kitchenscan/mobile start",
+    "demo:check": "node scripts/check-demo-readiness.mjs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",

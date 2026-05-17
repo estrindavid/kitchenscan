@@ -8,6 +8,7 @@ import { usePrefsStore } from '../../stores/prefsStore';
 import { useUsageSummary } from '../../hooks/useUsageSummary';
 import { useFeedbackSummary } from '../../hooks/useFeedbackSummary';
 import { useImpactSummary } from '../../hooks/useImpactSummary';
+import { useSystemStatus } from '../../hooks/useSystemStatus';
 import { api } from '../../services/api';
 import { getAnonymousId, trackEvent } from '../../services/analytics';
 
@@ -28,6 +29,7 @@ export default function ProfileScreen() {
   const { data: usage } = useUsageSummary();
   const { data: feedback, refetch: refetchFeedback } = useFeedbackSummary();
   const { data: impact } = useImpactSummary();
+  const { data: system } = useSystemStatus();
   const [rating, setRating] = useState(5);
   const [wouldUseAgain, setWouldUseAgain] = useState(true);
   const [mostUseful, setMostUseful] = useState('');
@@ -65,6 +67,25 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Typography variant="h2">Profile</Typography>
+
+      {/* Demo readiness */}
+      <Card style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Typography variant="h3">Demo Readiness</Typography>
+          <Badge label={system?.ok ? 'Ready' : 'Needs setup'} variant={system?.ok ? 'success' : 'warning'} />
+        </View>
+        <View style={styles.statusRows}>
+          <StatusRow label="API" ready={system?.api.reachable ?? false} />
+          <StatusRow label="RocketRide" ready={system?.rocketride.configured ?? false} />
+          <StatusRow label="Gemini / Google" ready={system?.google.configured ?? false} />
+          <StatusRow label="Pipelines" ready={system?.pipelineFilesReady ?? false} />
+        </View>
+        {system?.missing.length ? (
+          <Typography variant="caption" color={colors.textSecondary}>
+            Missing: {system.missing.slice(0, 4).join(', ')}
+          </Typography>
+        ) : null}
+      </Card>
 
       {/* Impact snapshot */}
       <Card style={styles.section}>
@@ -317,6 +338,18 @@ function readinessVariant(readiness: 'needs_testers' | 'promising' | 'demo_ready
   return 'warning';
 }
 
+function StatusRow({ label, ready }: { label: string; ready: boolean }) {
+  return (
+    <View style={styles.statusRow}>
+      <View style={[styles.statusDot, ready ? styles.statusDotReady : styles.statusDotMissing]} />
+      <Typography variant="captionMedium" color={colors.text}>{label}</Typography>
+      <Typography variant="caption" color={ready ? colors.success : colors.warning}>
+        {ready ? 'Connected' : 'Check'}
+      </Typography>
+    </View>
+  );
+}
+
 function FunnelStep({ label, value }: { label: string; value: number }) {
   return (
     <View style={styles.funnelStep}>
@@ -347,6 +380,19 @@ const styles = StyleSheet.create({
   impactHighlights: { gap: spacing.xs },
   impactHighlightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
   impactHighlightText: { flex: 1 },
+  statusRows: { gap: spacing.xs },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  statusDot: { width: 9, height: 9, borderRadius: 5 },
+  statusDotReady: { backgroundColor: colors.success },
+  statusDotMissing: { backgroundColor: colors.warning },
   feedbackStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   ratingRow: { flexDirection: 'row', gap: spacing.xs },
   ratingButton: {

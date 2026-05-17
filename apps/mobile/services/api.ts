@@ -1,7 +1,12 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 
+declare const process: { env?: Record<string, string | undefined> };
+
 function getApiBaseUrl(): string {
+  const explicitUrl = process.env?.EXPO_PUBLIC_API_URL;
+  if (explicitUrl) return explicitUrl;
+
   // In Expo Go with --lan, hostUri is "192.168.x.x:port" — reuse the host with API port 3001
   const hostUri = (Constants.expoConfig as { hostUri?: string } | undefined)?.hostUri;
   if (hostUri) {

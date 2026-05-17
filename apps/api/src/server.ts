@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './loadEnv';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
@@ -10,6 +10,9 @@ import { usageEventNames, usageEventStore } from './services/usageEvents';
 import { pantryStore } from './services/pantryStore';
 import { feedbackStore } from './services/feedbackStore';
 import { createImpactSummary } from './services/impactSummary';
+import { createSystemStatus } from './services/systemStatus';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const envToLogger: Record<string, object | boolean> = {
   development: {
@@ -145,6 +148,28 @@ export async function buildApp() {
           product: 'Gemini on Google Cloud / Vertex AI',
         },
       },
+    };
+  });
+
+  app.get('/system/status', async () => {
+    const host = process.env.HOST ?? '0.0.0.0';
+    const port = process.env.PORT ?? '3001';
+    const pipelinePaths = [
+      process.env.KITCHENSCAN_EXTRACT_PIPELINE
+        ?? path.resolve(process.cwd(), '../../pipelines/extract-ingredients.pipe'),
+      process.env.KITCHENSCAN_RECIPE_PIPELINE
+        ?? path.resolve(process.cwd(), '../../pipelines/generate-recipes.pipe'),
+    ];
+
+    return {
+      data: createSystemStatus({
+        env: process.env,
+        apiBaseUrl: `http://${host}:${port}`,
+        pipelines: pipelinePaths.map((pipelinePath) => ({
+          name: path.basename(pipelinePath),
+          exists: fs.existsSync(pipelinePath),
+        })),
+      }),
     };
   });
 

@@ -9,6 +9,8 @@ KitchenScan is a Build with AI hackathon project: scan the ingredients in your k
 - Real app: Expo mobile app for the phone demo.
 - Impact: reduce food waste, save money, and make cooking easier for students and households.
 
+See [docs/DEMO_SETUP.md](docs/DEMO_SETUP.md) for the exact connected-demo setup checklist.
+
 ## Planned Workflow
 
 1. Capture fridge, pantry, freezer, or counter photos.

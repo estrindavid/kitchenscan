@@ -54,4 +54,26 @@ describe('KitchenScan API shell', () => {
     expect(body.openapi).toBeDefined();
     expect(body.info?.title).toBe('KitchenScan API');
   });
+
+  it('reports setup status without leaking API keys', async () => {
+    const res = await app.inject({ method: 'GET', url: '/system/status' });
+    const body = JSON.parse(res.body) as {
+      data: {
+        ok: boolean;
+        api: { reachable: boolean; baseUrl: string };
+        rocketride: { configured: boolean; uriConfigured: boolean; apiKeyConfigured: boolean };
+        google: { configured: boolean; geminiKeyConfigured: boolean; projectConfigured: boolean };
+        missing: string[];
+      };
+    };
+
+    expect(res.statusCode).toBe(200);
+    expect(body.data.api.reachable).toBe(true);
+    expect(body.data.api.baseUrl).toContain('3001');
+    expect(body.data.rocketride).toHaveProperty('configured');
+    expect(body.data.google).toHaveProperty('configured');
+    if (process.env.ROCKETRIDE_APIKEY) {
+      expect(JSON.stringify(body)).not.toContain(process.env.ROCKETRIDE_APIKEY);
+    }
+  });
 });
