@@ -23,8 +23,8 @@ const STATUS_CONFIG: Record<
   idle:       { message: 'Tap Capture to scan food items',                         showSpinner: false, dotColor: '#888' },
   processing: { message: 'Identifying items…',                                     showSpinner: true,  dotColor: colors.warning },
   detected:   { message: 'Items found — capture another photo or review below',     showSpinner: false, dotColor: colors.primary },
-  empty:      { message: 'Nothing found — try a different angle or add manually',  showSpinner: false, dotColor: '#888' },
-  error:      { message: 'Could not reach detection service — add items manually', showSpinner: false, dotColor: colors.danger },
+  empty:      { message: 'Nothing found — try a different angle',                 showSpinner: false, dotColor: '#888' },
+  error:      { message: 'Could not reach detection service — try again',          showSpinner: false, dotColor: colors.danger },
 };
 
 export function ScannerOverlay({
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   bottomRight: { bottom: 0, right: 0, borderBottomWidth: CORNER_THICKNESS, borderRightWidth: CORNER_THICKNESS, borderBottomRightRadius: 4 },
   statusDotContainer: {
     position: 'absolute',
-    top: 16,
+    top: 64,
     right: 16,
   },
   statusDot: {
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   sessionContainer: {
     position: 'absolute',
-    top: 14,
+    top: 62,
     left: 16,
     backgroundColor: 'rgba(0,0,0,0.48)',
     borderRadius: 999,

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View, ScrollView, Image, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography, Badge, Button } from '../../components/ui';
 import { IngredientList } from '../../components/recipes/IngredientList';
 import { RecipeDetailSkeleton } from '../../components/recipes/RecipeDetailSkeleton';
@@ -92,18 +93,21 @@ export default function RecipeDetailScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Header row: back + heart */}
-      <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Typography variant="bodyMedium" color={colors.primary}>← Back</Typography>
-        </Pressable>
-        <Pressable onPress={handleToggleFavorite} hitSlop={12} style={styles.heartBtn}>
-          <Ionicons
-            name={favorited ? 'heart' : 'heart-outline'}
-            size={26}
-            color={favorited ? colors.danger : colors.textTertiary}
-          />
-        </Pressable>
-      </View>
+      <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+            <Ionicons name="chevron-back" size={22} color={colors.primary} />
+            <Typography variant="bodyMedium" color={colors.primary}>Back</Typography>
+          </Pressable>
+          <Pressable onPress={handleToggleFavorite} hitSlop={12} style={styles.heartBtn}>
+            <Ionicons
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={28}
+              color={favorited ? colors.danger : colors.textTertiary}
+            />
+          </Pressable>
+        </View>
+      </SafeAreaView>
 
       {/* Hero image */}
       {recipe.imageUrl ? (
@@ -263,15 +267,32 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.background,
   },
+  headerSafeArea: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
   },
-  backBtn: {},
-  heartBtn: { padding: spacing.xs },
+  backBtn: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingRight: spacing.md,
+  },
+  heartBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   image: { width: '100%', height: 220 },
   imagePlaceholder: { backgroundColor: colors.surfaceSecondary },
   section: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.sm },

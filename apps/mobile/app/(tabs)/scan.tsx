@@ -6,7 +6,6 @@ import {
   TextInput,
   Pressable,
   Text,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
@@ -125,35 +124,10 @@ export default function ScanScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <Scanner onAddToPantry={handleAddToPantry} />
-
-      {/* Manual add bar — floats above the camera */}
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholder="Type a food name to add…"
-          placeholderTextColor="rgba(255,255,255,0.45)"
-          returnKeyType="done"
-          onSubmitEditing={handleManualAdd}
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        <Pressable
-          style={[styles.addBtn, !searchText.trim() && styles.addBtnDisabled]}
-          onPress={handleManualAdd}
-          disabled={!searchText.trim()}
-        >
-          <Text style={styles.addBtnText}>+</Text>
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -292,44 +266,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
-  },
-  // ── Camera Mode ───────────────────────────────────────────
-  searchBar: {
-    position: 'absolute',
-    top: 52,
-    left: spacing.lg,
-    right: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingLeft: spacing.md,
-    paddingRight: 4,
-    gap: spacing.xs,
-  },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    color: '#fff',
-    fontSize: 15,
-  },
-  addBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  addBtnText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '300',
-    lineHeight: 26,
   },
 });

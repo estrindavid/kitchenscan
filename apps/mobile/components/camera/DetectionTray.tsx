@@ -31,7 +31,7 @@ export function DetectionTray({
           No items detected yet
         </Typography>
         <Typography variant="label" color="rgba(255,255,255,0.4)">
-          Scan a barcode or type a name below
+          Tap capture or scan a barcode
         </Typography>
       </View>
     );
