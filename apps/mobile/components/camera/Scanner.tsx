@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { Image, View, StyleSheet, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 import { useScanStore } from '../../stores/scanStore';
@@ -34,6 +34,7 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
   const [previewLayout, setPreviewLayout] = useState({ width: 0, height: 0 });
   const [frameSize, setFrameSize] = useState({ width: 1, height: 1 });
   const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
   const barcodeCooldownRef = useRef(0);
   const BARCODE_COOLDOWN_MS = 3000;
 
@@ -103,6 +104,8 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
       const photo = await (cameraRef.current as unknown as {
         takePhoto: (opts: object) => Promise<{ path: string; width: number; height: number }>;
       }).takePhoto({ flash: 'off' });
+      const previewUri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
+      setCapturedPhotoUri(previewUri);
       // Convert file path to base64 for the cloud provider
       const base64 = photo.path;
       const detections = await provider.detect(base64, photo.width ?? 1, photo.height ?? 1);
@@ -112,6 +115,12 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
       setLastError((err as Error).message);
     }
   }, [scanStatus, setScanStatus, setLastError, handleDetections]);
+
+  const handleRetake = useCallback(() => {
+    setCapturedPhotoUri(null);
+    setLastError(null);
+    setScanStatus('idle');
+  }, [setLastError, setScanStatus]);
 
   const frameProcessor = useFrameProcessor(
     (_frame: { width: number; height: number; timestamp: number }) => {
@@ -154,35 +163,38 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
         })
       }
     >
-      <Camera
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={!detectedBarcode}
-        frameProcessor={frameProcessor}
-        codeScanner={codeScanner}
-        pixelFormat="rgb"
-        fps={30}
-        photo
-        video={false}
-        enableBufferCompression
-        onInitialized={() =>
-          setFrameSize({
-            width: device.formats[0]?.videoWidth ?? 1920,
-            height: device.formats[0]?.videoHeight ?? 1080,
-          })
-        }
-      />
+      {capturedPhotoUri ? (
+        <Image source={{ uri: capturedPhotoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <Camera
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={!detectedBarcode}
+          frameProcessor={frameProcessor}
+          codeScanner={codeScanner}
+          pixelFormat="rgb"
+          fps={30}
+          photo
+          video={false}
+          enableBufferCompression
+          onInitialized={() =>
+            setFrameSize({
+              width: device.formats[0]?.videoWidth ?? 1920,
+              height: device.formats[0]?.videoHeight ?? 1080,
+            })
+          }
+        />
+      )}
       <ScannerOverlay
         scanStatus={scanStatus}
         photoCount={scanAttempts}
         itemCount={items.length}
         errorMessage={lastError}
         onCapture={handleCapture}
-        onRetry={() => {
-          setLastError(null);
-          setScanStatus('idle');
-        }}
+        onRetake={handleRetake}
+        showingCapturedPhoto={Boolean(capturedPhotoUri)}
+        onRetry={handleRetake}
       />
       <BoundingBoxRenderer
         items={items}
@@ -218,6 +230,7 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
     ) => Promise<{ base64?: string; width: number; height: number }>;
   } | null>(null);
   const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
   const barcodeCooldownRef = useRef(0);
   const BARCODE_COOLDOWN_MS = 3000;
 
@@ -257,6 +270,7 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
 
       const provider = getDetectionProvider();
       const base64 = dataUriToBase64(photo.base64);
+      setCapturedPhotoUri(`data:image/jpeg;base64,${base64}`);
       const detections = await provider.detect(base64, photo.width, photo.height);
       const filtered = filterByConfidence(nms(detections), 0.4);
 
@@ -276,6 +290,12 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
       setLastError((err as Error).message);
     }
   }, [scanStatus, setScanStatus, setLastError, addDetections]);
+
+  const handleRetake = useCallback(() => {
+    setCapturedPhotoUri(null);
+    setLastError(null);
+    setScanStatus('idle');
+  }, [setLastError, setScanStatus]);
 
   const handleBarcodeScanned = useCallback(
     (result: { data: string }) => {
@@ -311,23 +331,26 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['ean13', 'upc_a', 'ean8', 'code128', 'code39'] }}
-        onBarcodeScanned={detectedBarcode ? undefined : handleBarcodeScanned}
-      />
+      {capturedPhotoUri ? (
+        <Image source={{ uri: capturedPhotoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['ean13', 'upc_a', 'ean8', 'code128', 'code39'] }}
+          onBarcodeScanned={detectedBarcode ? undefined : handleBarcodeScanned}
+        />
+      )}
       <ScannerOverlay
         scanStatus={scanStatus}
         photoCount={scanAttempts}
         itemCount={items.length}
         errorMessage={lastError}
         onCapture={handleCapture}
-        onRetry={() => {
-          setLastError(null);
-          setScanStatus('idle');
-        }}
+        onRetake={handleRetake}
+        showingCapturedPhoto={Boolean(capturedPhotoUri)}
+        onRetry={handleRetake}
       />
       <BoundingBoxRenderer
         items={items}

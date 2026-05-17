@@ -12,6 +12,8 @@ interface ScannerOverlayProps {
   scanStatus: ScanStatus;
   onRetry?: () => void;
   onCapture?: () => void;
+  onRetake?: () => void;
+  showingCapturedPhoto?: boolean;
   photoCount?: number;
   itemCount?: number;
   errorMessage?: string | null;
@@ -32,6 +34,8 @@ export function ScannerOverlay({
   scanStatus,
   onRetry,
   onCapture,
+  onRetake,
+  showingCapturedPhoto = false,
   photoCount = 0,
   itemCount = 0,
   errorMessage,
@@ -109,12 +113,20 @@ export function ScannerOverlay({
         </View>
       )}
 
-      {/* Capture button (idle / empty states) */}
-      {(scanStatus === 'idle' || scanStatus === 'empty' || scanStatus === 'detected') && onCapture && (
+      {/* Capture / retake button */}
+      {(scanStatus === 'idle' || scanStatus === 'empty' || scanStatus === 'detected') && (onCapture || onRetake) && (
         <View style={styles.captureContainer} pointerEvents="box-none">
-          <TouchableOpacity style={styles.captureBtn} onPress={onCapture}>
-            <View style={styles.captureInner} />
-          </TouchableOpacity>
+          {showingCapturedPhoto && onRetake ? (
+            <TouchableOpacity style={styles.retakeBtn} onPress={onRetake}>
+              <Typography variant="captionMedium" color="#fff">
+                Retake photo
+              </Typography>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.captureBtn} onPress={onCapture}>
+              <View style={styles.captureInner} />
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>
@@ -220,5 +232,15 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 27,
     backgroundColor: 'rgba(255,255,255,0.52)',
+  },
+  retakeBtn: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.52)',
   },
 });
