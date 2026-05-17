@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Stack, useRootNavigationState, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -24,7 +24,17 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const resolvedColors = useTheme();
+  const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
+  const didForceWelcome = useRef(false);
   const isDark = resolvedColors === darkColors;
+
+  useEffect(() => {
+    if (didForceWelcome.current || !rootNavigationState?.key) return;
+
+    didForceWelcome.current = true;
+    router.replace('/onboarding/welcome');
+  }, [rootNavigationState?.key, router]);
 
   return (
     <>
