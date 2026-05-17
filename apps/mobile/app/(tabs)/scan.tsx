@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Scanner } from '../../components/camera/Scanner';
@@ -28,8 +28,20 @@ const DEMO_ITEMS = [
 
 export default function ScanScreen() {
   const router = useRouter();
-  const { items, addDetection, addDetections, reset, recordCapture, scanAttempts } = useScanStore();
+  const { items, addDetection, addDetections, reset, recordCapture, scanAttempts, setScanning, setScanStatus } = useScanStore();
   const [searchText, setSearchText] = useState('');
+  const [isFocused, setIsFocused] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+        setScanning(false);
+        setScanStatus('idle');
+      };
+    }, [setScanning, setScanStatus]),
+  );
 
   const handleAddToPantry = useCallback(() => {
     const confirmed = items.filter((i) => i.confirmed);
@@ -139,7 +151,7 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <Scanner onAddToPantry={handleAddToPantry} />
+      {isFocused ? <Scanner onAddToPantry={handleAddToPantry} /> : null}
     </View>
   );
 }
