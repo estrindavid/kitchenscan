@@ -92,6 +92,8 @@ interface RocketRideClientLike {
 
 const PIPELINE_NAME = 'generate-recipes.pipe';
 const GEMINI_MODEL = 'gemini-2.5-flash';
+const DEFAULT_ROCKETRIDE_RECIPE_TIMEOUT_MS = 3500;
+const DEFAULT_GEMINI_RECIPE_TIMEOUT_MS = 28000;
 const DEFAULT_PIPELINE: RecipePipelineMetadata = {
   provider: 'RocketRide + Gemini',
   name: PIPELINE_NAME,
@@ -228,7 +230,11 @@ export function buildFallbackRecipes(ingredients: string[]): RecipeDetail[] {
 export async function generateRecipes(input: GenerateRecipesInput): Promise<GenerateRecipesResult> {
   const pantry = cleanIngredients(input.ingredients);
   const pipelinePath = getPipelinePath();
-  const rocketRideRecipes = await executeRocketRidePipeline(pipelinePath, input);
+  const rocketRideRecipes = await withFallbackTimeout(
+    executeRocketRidePipeline(pipelinePath, input),
+    getPositiveIntEnv('ROCKETRIDE_RECIPE_TIMEOUT_MS', DEFAULT_ROCKETRIDE_RECIPE_TIMEOUT_MS),
+    [],
+  );
   const geminiRecipes = rocketRideRecipes.length > 0 ? [] : await executeGeminiRecipeGeneration(input);
   const generatedRecipes = rocketRideRecipes.length > 0 ? rocketRideRecipes : geminiRecipes;
   const pipeline =
@@ -276,8 +282,9 @@ async function executeGeminiRecipeGeneration(input: GenerateRecipesInput): Promi
       generationConfig: {
         responseMimeType: 'application/json',
         temperature: 0.45,
+        maxOutputTokens: 2048,
       },
-    }, 'Recipe generation');
+    }, 'Recipe generation', getPositiveIntEnv('GEMINI_RECIPE_TIMEOUT_MS', DEFAULT_GEMINI_RECIPE_TIMEOUT_MS));
 
     if (!body) return [];
     return parseGeminiRecipes(body);
@@ -383,6 +390,24 @@ async function executeRocketRidePipeline(
 function canAttemptRocketRide() {
   if (!process.env.ROCKETRIDE_URI) return false;
   return Boolean(process.env.ROCKETRIDE_APIKEY) || isLocalRocketRideUri(process.env.ROCKETRIDE_URI);
+}
+
+function withFallbackTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(() => resolve(fallback))
+      .finally(() => clearTimeout(timer));
+  });
+}
+
+function getPositiveIntEnv(name: string, fallback: number) {
+  const value = process.env[name];
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function buildRecipePrompt(input: GenerateRecipesInput) {

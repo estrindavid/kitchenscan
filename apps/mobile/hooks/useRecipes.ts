@@ -91,6 +91,14 @@ function computeLocalMatches(
   return { recipes: paginated, total: results.length, offset, limit };
 }
 
+function getRecipeSearchErrorMessage(error: unknown) {
+  const maybeAxios = error as { code?: string; message?: string } | undefined;
+  if (maybeAxios?.code === 'ECONNABORTED') {
+    return 'Recipe generation took too long. Check that the API terminal is still running, then try again.';
+  }
+  return maybeAxios?.message ?? 'Recipe generation failed.';
+}
+
 interface RecipeSearchFilters {
   dietary?: string[];
   maxCookTime?: number;
@@ -133,6 +141,7 @@ export function useRecipeSearch(
       try {
         const { data } = await api.get<{ data: RecipeSearchResponse }>(
           `/recipes/search?${params}`,
+          { timeout: 30000 },
         );
         void trackEvent('recipe_search_viewed', {
           pantryItemCount: ingredientNames.length,
@@ -144,6 +153,7 @@ export function useRecipeSearch(
         if (process.env?.EXPO_PUBLIC_DEMO_RECIPE_FALLBACK !== 'true') {
           throw error;
         }
+        console.warn(getRecipeSearchErrorMessage(error));
         const fallback = computeLocalMatches(ingredientNames, filters);
         void trackEvent('recipe_search_viewed', {
           pantryItemCount: ingredientNames.length,
@@ -154,6 +164,7 @@ export function useRecipeSearch(
       }
     },
     enabled: ingredientNames.length > 0 && options.enabled !== false,
+    retry: false,
     staleTime: 1000 * 60 * 5,
   });
 }

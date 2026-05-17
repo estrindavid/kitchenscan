@@ -26,13 +26,14 @@ type AuthMode = 'vertex-adc' | 'developer-api-key';
 export async function generateGeminiContent(
   input: GenerateContentInput,
   errorPrefix: string,
+  timeoutMs = getGeminiRequestTimeoutMs(),
 ): Promise<unknown> {
   const authMode = getGoogleAuthMode();
   if (!authMode) return null;
 
   const response = authMode === 'vertex-adc'
-    ? await callVertexGemini(input)
-    : await callDeveloperGemini(input);
+    ? await callVertexGemini(input, timeoutMs)
+    : await callDeveloperGemini(input, timeoutMs);
 
   if (!response.ok) {
     throw new AiServiceUnavailableError(await readGeminiError(response, errorPrefix, authMode));
@@ -59,7 +60,7 @@ function canUseAdc(env: NodeJS.ProcessEnv | Record<string, string | undefined> =
   return Boolean(env.GOOGLE_APPLICATION_CREDENTIALS || readAdcFile(env));
 }
 
-async function callVertexGemini(input: GenerateContentInput) {
+async function callVertexGemini(input: GenerateContentInput, timeoutMs: number) {
   const project = getGoogleCloudProject();
   if (!project) {
     throw new AiServiceUnavailableError('Vertex AI Gemini needs GOOGLE_CLOUD_PROJECT or an ADC quota project.');
@@ -70,28 +71,29 @@ async function callVertexGemini(input: GenerateContentInput) {
   const model = process.env.VERTEX_GEMINI_MODEL ?? process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
   const modelPath = `projects/${project}/locations/${location}/publishers/google/models/${model}`;
 
-  return fetch(`https://aiplatform.googleapis.com/v1/${modelPath}:generateContent`, {
+  return fetchWithTimeout(`https://aiplatform.googleapis.com/v1/${modelPath}:generateContent`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
-  });
+  }, timeoutMs);
 }
 
-async function callDeveloperGemini(input: GenerateContentInput) {
+async function callDeveloperGemini(input: GenerateContentInput, timeoutMs: number) {
   const apiKey = process.env.ROCKETRIDE_GEMINI_API_KEY;
   if (!apiKey) throw new AiServiceUnavailableError('ROCKETRIDE_GEMINI_API_KEY is missing.');
 
   const model = process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
-  return fetch(
+  return fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     },
+    timeoutMs,
   );
 }
 
@@ -149,6 +151,30 @@ function getGcloudEnv() {
     ...process.env,
     CLOUDSDK_PYTHON: process.env.CLOUDSDK_PYTHON ?? '/opt/homebrew/bin/python3.14',
   };
+}
+
+function getGeminiRequestTimeoutMs() {
+  return coercePositiveInt(process.env.GEMINI_REQUEST_TIMEOUT_MS, 20000);
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function coercePositiveInt(value: string | undefined, fallback: number) {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function readAdcFile(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env): AdcFile | null {

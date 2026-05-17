@@ -205,7 +205,10 @@ export default function RecipesScreen() {
 function getRecipeErrorMessage(error: unknown) {
   const fallback = 'Could not generate recipes. Check RocketRide/Gemini setup, then try again.';
   if (!error || typeof error !== 'object') return fallback;
-  const maybeAxios = error as { response?: { data?: { message?: string } }; message?: string };
+  const maybeAxios = error as { code?: string; response?: { data?: { message?: string } }; message?: string };
+  if (maybeAxios.code === 'ECONNABORTED') {
+    return 'Recipe generation took too long. Check that the API terminal is still running, then try again.';
+  }
   return maybeAxios.response?.data?.message ?? maybeAxios.message ?? fallback;
 }
 
