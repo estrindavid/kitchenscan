@@ -4,7 +4,6 @@ import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 import { useScanStore } from '../../stores/scanStore';
 import { ScannerOverlay } from './ScannerOverlay';
-import { BoundingBoxRenderer } from './BoundingBoxRenderer';
 import { DetectionTray } from './DetectionTray';
 import { BarcodeResultSheet } from '../barcode/BarcodeResultSheet';
 import { filterByConfidence, nms } from '../../utils/deduplication';
@@ -31,7 +30,6 @@ export function Scanner({ onAddToPantry }: ScannerProps) {
 // ─── Native Scanner ────────────────────────────────────────
 
 function NativeScanner({ onAddToPantry }: ScannerProps) {
-  const [previewLayout, setPreviewLayout] = useState({ width: 0, height: 0 });
   const [frameSize, setFrameSize] = useState({ width: 1, height: 1 });
   const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
@@ -154,15 +152,7 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
   if (!device) return <View style={styles.centered} />;
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
-      onLayout={(e) =>
-        setPreviewLayout({
-          width: e.nativeEvent.layout.width,
-          height: e.nativeEvent.layout.height,
-        })
-      }
-    >
+    <View style={StyleSheet.absoluteFill}>
       {capturedPhotoUri ? (
         <Image source={{ uri: capturedPhotoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       ) : (
@@ -195,13 +185,6 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
         onRetake={handleRetake}
         showingCapturedPhoto={Boolean(capturedPhotoUri)}
         onRetry={handleRetake}
-      />
-      <BoundingBoxRenderer
-        items={items}
-        previewWidth={previewLayout.width}
-        previewHeight={previewLayout.height}
-        frameWidth={frameSize.width}
-        frameHeight={frameSize.height}
       />
       <DetectionTray
         items={items}
@@ -351,13 +334,6 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
         onRetake={handleRetake}
         showingCapturedPhoto={Boolean(capturedPhotoUri)}
         onRetry={handleRetake}
-      />
-      <BoundingBoxRenderer
-        items={items}
-        previewWidth={400}
-        previewHeight={700}
-        frameWidth={400}
-        frameHeight={700}
       />
       <DetectionTray
         items={items}
