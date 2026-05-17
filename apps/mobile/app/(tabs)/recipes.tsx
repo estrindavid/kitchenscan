@@ -2,8 +2,6 @@ import { useState } from 'react';
 import {
   View,
   FlatList,
-  Pressable,
-  TextInput,
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,18 +14,7 @@ import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { usePantryItems } from '../../hooks/usePantry';
 import { useRecipeSearch } from '../../hooks/useRecipes';
 
-const DIFFICULTY_OPTIONS = ['Any', 'beginner', 'intermediate', 'advanced'];
-const TIME_OPTIONS = [
-  { label: 'Any time', value: undefined },
-  { label: '≤ 15 min', value: 15 },
-  { label: '≤ 30 min', value: 30 },
-  { label: '≤ 60 min', value: 60 },
-];
-
 export default function RecipesScreen() {
-  const [difficulty, setDifficulty] = useState<string | undefined>();
-  const [maxCookTime, setMaxCookTime] = useState<number | undefined>();
-  const [cuisineFilter, setCuisineFilter] = useState('');
   const [hasRequestedRecipes, setHasRequestedRecipes] = useState(false);
 
   const { data: pantryItems = [], isLoading: isPantryLoading } = usePantryItems();
@@ -42,11 +29,7 @@ export default function RecipesScreen() {
     refetch,
   } = useRecipeSearch(
     ingredientNames,
-    {
-      difficulty: difficulty || undefined,
-      maxCookTime,
-      cuisineType: cuisineFilter.trim() || undefined,
-    },
+    {},
     { enabled: hasRequestedRecipes },
   );
 
@@ -68,80 +51,21 @@ export default function RecipesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <BrandHeader
-          eyebrow="Cook what you own"
+          eyebrow="AI recipes"
           title="Recipes"
           subtitle={
             activePantryItems.length > 0
-              ? `Matched to ${activePantryItems.length} pantry item${activePantryItems.length === 1 ? '' : 's'}`
-              : 'Add items to your pantry to get matches'
+              ? `From ${activePantryItems.length} pantry item${activePantryItems.length === 1 ? '' : 's'} you already have`
+              : 'Scan or add ingredients to start matching meals'
           }
           accent="lemon"
-          accessory={<FoodIcon type="pasta" size={62} />}
+          accessory={<FoodIcon type="pasta" size={50} />}
         />
-      </View>
-
-      {/* Filters */}
-      <View style={styles.filters}>
-        {/* Cuisine text filter */}
-        <View style={styles.inputWrap}>
-          <Ionicons name="search" size={17} color={colors.textTertiary} />
-          <TextInput
-            style={styles.cuisineInput}
-            placeholder="Optional cuisine preference"
-            placeholderTextColor={colors.textTertiary}
-            value={cuisineFilter}
-            onChangeText={setCuisineFilter}
-            returnKeyType="done"
-          />
-        </View>
-
-        {/* Difficulty pills */}
-        <View style={styles.pillRow}>
-          {DIFFICULTY_OPTIONS.map((d) => {
-            const selected = (d === 'Any' && !difficulty) || d === difficulty;
-            return (
-              <Pressable
-                key={d}
-                style={[styles.pill, selected && styles.pillSelected]}
-                onPress={() => setDifficulty(d === 'Any' ? undefined : d)}
-              >
-                <Typography
-                  variant="captionMedium"
-                  color={selected ? brandColors.ink : colors.textSecondary}
-                >
-                  {d.charAt(0).toUpperCase() + d.slice(1)}
-                </Typography>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Cook time pills */}
-        <View style={styles.pillRow}>
-          {TIME_OPTIONS.map(({ label, value }) => {
-            const selected = value === maxCookTime;
-            return (
-              <Pressable
-                key={label}
-                style={[styles.pill, selected && styles.pillSelected]}
-                onPress={() => setMaxCookTime(value)}
-              >
-                <Typography
-                  variant="captionMedium"
-                  color={selected ? brandColors.ink : colors.textSecondary}
-                >
-                  {label}
-                </Typography>
-              </Pressable>
-            );
-          })}
-        </View>
-
       </View>
 
       {/* Content */}
       {isLoading && (hasRequestedRecipes || isPantryLoading) ? (
-        <View style={styles.list}>
+        <View style={[styles.resultsList, styles.list]}>
           {Array.from({ length: 3 }).map((_, i) => <RecipeCardSkeleton key={i} />)}
         </View>
       ) : isError ? (
@@ -167,7 +91,7 @@ export default function RecipesScreen() {
           <EmptyState
             icon="✨"
             title="Ready when you are"
-            subtitle="Tap Find me recipes to ask RocketRide and Gemini for meals using your pantry."
+            subtitle="Tap Find me recipes to turn your pantry into meal ideas."
             titleColor={brandColors.ink}
             subtitleColor={colors.text}
           />
@@ -177,7 +101,7 @@ export default function RecipesScreen() {
           <EmptyState
             icon="🔍"
             title="No matching recipes"
-            subtitle="Try removing filters, or add more items to your pantry."
+            subtitle="Try scanning more ingredients or adding items to your pantry."
             titleColor={brandColors.ink}
             subtitleColor={colors.text}
           />
@@ -185,13 +109,14 @@ export default function RecipesScreen() {
       ) : (
         <FlatList
           data={recipes}
+          style={styles.resultsList}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => <RecipeCard recipe={item} />}
           ListHeaderComponent={
             <Typography variant="caption" color={colors.textTertiary} style={styles.resultCount}>
-              {recipes.length} recipe{recipes.length !== 1 ? 's' : ''} found
+              {recipes.length} recipe{recipes.length !== 1 ? 's' : ''} from your pantry
             </Typography>
           }
         />
@@ -230,50 +155,13 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.lg,
     backgroundColor: 'rgba(234,248,255,0.96)',
-  },
-  filters: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-    backgroundColor: 'rgba(234,248,255,0.96)',
-    borderBottomWidth: 3,
+    borderBottomWidth: 2,
     borderBottomColor: brandColors.ink,
-    gap: spacing.sm,
   },
-  inputWrap: {
-    minHeight: 42,
-    borderWidth: 2,
-    borderColor: brandColors.ink,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: brandColors.white,
-  },
-  cuisineInput: {
+  resultsList: {
     flex: 1,
-    minHeight: 38,
-    fontSize: 14,
-    color: colors.text,
-  },
-  pillRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
-  },
-  pill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: brandColors.ink,
-    backgroundColor: brandColors.white,
-  },
-  pillSelected: {
-    backgroundColor: brandColors.peach,
-    borderColor: brandColors.ink,
   },
   list: {
     padding: spacing.lg,

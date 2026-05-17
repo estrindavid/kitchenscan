@@ -3,19 +3,13 @@ import { View, Pressable, Image, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FoodIcon } from '../brand';
-import { Typography, Badge } from '../ui';
+import { Typography } from '../ui';
 import { brandColors, colors, spacing, radii } from '../ui/theme';
 import type { RecipeSearchResult } from '../../hooks/useRecipes';
 
 interface RecipeCardProps {
   recipe: RecipeSearchResult;
 }
-
-const DIFFICULTY_COLOR: Record<string, 'success' | 'warning' | 'danger'> = {
-  beginner: 'success',
-  intermediate: 'warning',
-  advanced: 'danger',
-};
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const router = useRouter();
@@ -77,12 +71,6 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
               {recipe.description}
             </Typography>
           ) : null}
-
-          <View style={styles.meta}>
-            {recipe.totalTimeMinutes ? <Badge label={`${recipe.totalTimeMinutes} min`} /> : null}
-            <Badge label={recipe.difficulty} variant={DIFFICULTY_COLOR[recipe.difficulty]} />
-            {recipe.cuisineType ? <Badge label={recipe.cuisineType} /> : null}
-          </View>
 
           <View style={styles.matchRow}>
             <View style={styles.matchStats}>
@@ -151,7 +139,6 @@ const styles = StyleSheet.create({
   body: { padding: spacing.md, gap: spacing.sm },
   title: { flexShrink: 1 },
   description: { lineHeight: 18 },
-  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   matchRow: { gap: spacing.xs },
   matchStats: {
     flexDirection: 'row',
