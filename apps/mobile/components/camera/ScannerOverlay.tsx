@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   captureContainer: {
     position: 'absolute',
-    bottom: 76,
+    bottom: 108,
     left: 0,
     right: 0,
     alignItems: 'center',
