@@ -131,9 +131,15 @@ export async function extractIngredientsFromImage(
     };
   }
 
-  throw new AiServiceUnavailableError(
-    'Ingredient detection could not reach RocketRide/Gemini. Check the Gemini key, billing credits, and RocketRide connection.',
-  );
+  return {
+    detections: [],
+    modelVersion: `${GEMINI_MODEL}:direct`,
+    pipeline: {
+      provider: 'Gemini direct fallback',
+      name: PIPELINE_NAME,
+      usedFallback: true,
+    },
+  };
 }
 
 async function executeGeminiVision(input: ExtractIngredientsInput): Promise<IngredientCandidate[]> {

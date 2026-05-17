@@ -46,7 +46,7 @@ export function hasGeminiAuthConfigured(env: NodeJS.ProcessEnv | Record<string, 
 }
 
 export function getGoogleCloudProject(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env) {
-  return env.GOOGLE_CLOUD_PROJECT ?? env.GCLOUD_PROJECT ?? env.GCP_PROJECT ?? readAdcFile(env)?.quota_project_id;
+  return env.GOOGLE_CLOUD_PROJECT ?? env.GCLOUD_PROJECT ?? env.GCP_PROJECT;
 }
 
 function getGoogleAuthMode(): AuthMode | null {
