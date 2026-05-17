@@ -43,6 +43,14 @@ export default function ProfileScreen() {
     recipe_search_viewed: 0,
     recipe_viewed: 0,
   };
+  const demoLockItems = [
+    { label: 'RocketRide pipeline', ready: system?.rocketride.configured ?? false },
+    { label: 'Gemini / Google AI', ready: system?.google.configured ?? false },
+    { label: 'Connected API', ready: system?.api.reachable ?? false },
+    { label: 'Animated app shell', ready: true },
+    { label: 'Impact + validation board', ready: Boolean(impact || usage || feedback) },
+  ];
+  const lockedItems = demoLockItems.filter((item) => item.ready).length;
 
   async function handleSubmitFeedback() {
     setFeedbackStatus('saving');
@@ -75,6 +83,27 @@ export default function ProfileScreen() {
         accent="peach"
         accessory={<FoodIcon type="milk" size={58} />}
       />
+
+      <Card style={styles.lockCard}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Typography variant="h3" color={brandColors.ink}>Demo Lock</Typography>
+            <Typography variant="caption" color={colors.textSecondary}>
+              {lockedItems}/{demoLockItems.length} judge-critical surfaces ready
+            </Typography>
+          </View>
+          <View style={styles.lockBadge}>
+            <Typography variant="captionMedium" color={brandColors.ink}>
+              Sprint 5
+            </Typography>
+          </View>
+        </View>
+        <View style={styles.lockRows}>
+          {demoLockItems.map((item) => (
+            <DemoLockRow key={item.label} label={item.label} ready={item.ready} />
+          ))}
+        </View>
+      </Card>
 
       {/* Demo readiness */}
       <Card style={styles.heroSection}>
@@ -358,6 +387,24 @@ function StatusRow({ label, ready }: { label: string; ready: boolean }) {
   );
 }
 
+function DemoLockRow({ label, ready }: { label: string; ready: boolean }) {
+  return (
+    <View style={styles.lockRow}>
+      <Ionicons
+        name={ready ? 'checkmark-circle' : 'ellipse-outline'}
+        size={18}
+        color={ready ? brandColors.green : colors.warning}
+      />
+      <Typography variant="captionMedium" color={brandColors.ink} style={styles.lockText}>
+        {label}
+      </Typography>
+      <Typography variant="caption" color={ready ? colors.success : colors.warning}>
+        {ready ? 'Ready' : 'Check'}
+      </Typography>
+    </View>
+  );
+}
+
 function FunnelStep({ label, value }: { label: string; value: number }) {
   return (
     <View style={styles.funnelStep}>
@@ -383,6 +430,33 @@ const styles = StyleSheet.create({
     borderColor: brandColors.ink,
     backgroundColor: brandColors.white,
   },
+  lockCard: {
+    gap: spacing.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.lemon,
+  },
+  lockBadge: {
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  lockRows: { gap: spacing.xs },
+  lockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  lockText: { flex: 1 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tags: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
