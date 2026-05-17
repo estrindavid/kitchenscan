@@ -15,6 +15,9 @@ const checks = [
   ['generate-recipes.pipe', fs.existsSync(path.join(root, 'pipelines/generate-recipes.pipe'))],
 ];
 
+const geminiGenerate = await checkGeminiGenerate(env.ROCKETRIDE_GEMINI_API_KEY);
+checks.push(['Gemini generateContent credits', geminiGenerate.ok]);
+
 let apiReachable = false;
 try {
   const response = await fetch('http://127.0.0.1:3001/health');
@@ -35,9 +38,46 @@ if (missing.length > 0) {
   for (const item of missing) {
     console.log(`- ${item}`);
   }
+  if (!geminiGenerate.ok && geminiGenerate.reason) {
+    console.log(`\nGemini detail: ${geminiGenerate.reason}`);
+  }
   process.exitCode = 1;
 } else {
   console.log('\nReady for the connected demo.');
+}
+
+async function checkGeminiGenerate(apiKey) {
+  if (!apiKey) return { ok: false, reason: 'ROCKETRIDE_GEMINI_API_KEY is missing.' };
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: 'Return JSON only: {"ok":true}' }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0,
+          },
+        }),
+      },
+    );
+
+    if (response.ok) return { ok: true };
+
+    const body = await response.json().catch(() => ({}));
+    const message = body?.error?.message ?? `Gemini returned HTTP ${response.status}.`;
+    return { ok: false, reason: message };
+  } catch (error) {
+    return { ok: false, reason: error instanceof Error ? error.message : 'Gemini request failed.' };
+  }
 }
 
 function readDotEnv(filePath) {
