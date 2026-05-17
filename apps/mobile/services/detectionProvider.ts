@@ -43,7 +43,9 @@ export class CloudDetectionProvider implements DetectionProvider {
         width,
         height,
         confidence: 0.45,
-        maxDetections: 20,
+        maxDetections: 35,
+      }, {
+        timeout: 40000,
       });
       void trackEvent('scan_completed', {
         source: 'camera',
@@ -70,7 +72,10 @@ export class CloudDetectionProvider implements DetectionProvider {
 function getDetectionErrorMessage(error: unknown) {
   const fallback = 'Could not reach detection service. Check RocketRide/Gemini setup, then try again.';
   if (!error || typeof error !== 'object') return fallback;
-  const maybeAxios = error as { response?: { data?: { message?: string } }; message?: string };
+  const maybeAxios = error as { code?: string; response?: { data?: { message?: string } }; message?: string };
+  if (maybeAxios.code === 'ECONNABORTED') {
+    return 'Dense pantry scan took too long. Try again with the API running, or split the scan into two photos.';
+  }
   return maybeAxios.response?.data?.message ?? maybeAxios.message ?? fallback;
 }
 
