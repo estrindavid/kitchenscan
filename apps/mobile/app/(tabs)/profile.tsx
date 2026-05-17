@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
 import { Card, Typography, Button, Badge } from '../../components/ui';
-import { colors, spacing } from '../../components/ui/theme';
+import { brandColors, colors, radii, spacing } from '../../components/ui/theme';
 import { usePrefsStore } from '../../stores/prefsStore';
 import { useUsageSummary } from '../../hooks/useUsageSummary';
 import { useFeedbackSummary } from '../../hooks/useFeedbackSummary';
@@ -66,12 +67,19 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Typography variant="h2">Profile</Typography>
+      <MemphisBackground variant="cream" density="low" animated={false} />
+      <BrandHeader
+        eyebrow="Demo board"
+        title="KitchenScan"
+        subtitle="RocketRide, Gemini, validation, and impact in one judge-ready view."
+        accent="peach"
+        accessory={<FoodIcon type="milk" size={58} />}
+      />
 
       {/* Demo readiness */}
-      <Card style={styles.section}>
+      <Card style={styles.heroSection}>
         <View style={styles.sectionHeader}>
-          <Typography variant="h3">Demo Readiness</Typography>
+          <Typography variant="h3" color={brandColors.ink}>Demo Readiness</Typography>
           <Badge label={system?.ok ? 'Ready' : 'Needs setup'} variant={system?.ok ? 'success' : 'warning'} />
         </View>
         <View style={styles.statusRows}>
@@ -88,9 +96,9 @@ export default function ProfileScreen() {
       </Card>
 
       {/* Impact snapshot */}
-      <Card style={styles.section}>
+      <Card style={styles.heroSection}>
         <View style={styles.sectionHeader}>
-          <Typography variant="h3">Impact Snapshot</Typography>
+          <Typography variant="h3" color={brandColors.ink}>Impact Snapshot</Typography>
           <Badge
             label={readinessLabel(impact?.validationReadiness ?? 'needs_testers')}
             variant={readinessVariant(impact?.validationReadiness ?? 'needs_testers')}
@@ -105,7 +113,7 @@ export default function ProfileScreen() {
         <View style={styles.impactHighlights}>
           {(impact?.highlights ?? ['Scan pantry items to unlock meal and savings estimates.']).slice(0, 3).map((highlight) => (
             <View key={highlight} style={styles.impactHighlightRow}>
-              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+              <Ionicons name="checkmark-circle" size={16} color={brandColors.green} />
               <Typography variant="caption" color={colors.textSecondary} style={styles.impactHighlightText}>
                 {highlight}
               </Typography>
@@ -362,9 +370,19 @@ function FunnelStep({ label, value }: { label: string; value: number }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: brandColors.cream },
   content: { padding: spacing.lg, gap: spacing.lg },
-  section: { gap: spacing.sm },
+  section: {
+    gap: spacing.sm,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+  },
+  heroSection: {
+    gap: spacing.sm,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+  },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tags: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
@@ -372,8 +390,10 @@ const styles = StyleSheet.create({
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   metricTile: {
     width: '47%',
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: 8,
+    backgroundColor: brandColors.white,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     padding: spacing.md,
     gap: 2,
   },
@@ -385,13 +405,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: 8,
+    backgroundColor: brandColors.cream,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   statusDot: { width: 9, height: 9, borderRadius: 5 },
-  statusDotReady: { backgroundColor: colors.success },
+  statusDotReady: { backgroundColor: brandColors.green },
   statusDotMissing: { backgroundColor: colors.warning },
   feedbackStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   ratingRow: { flexDirection: 'row', gap: spacing.xs },
@@ -401,35 +423,35 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: brandColors.white,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
   ratingButtonSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: brandColors.ink,
+    borderColor: brandColors.ink,
   },
   choiceRow: { flexDirection: 'row', gap: spacing.sm },
   choiceButton: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: brandColors.white,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
   choiceButtonSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: brandColors.ink,
+    borderColor: brandColors.ink,
   },
   feedbackInput: {
     height: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     color: colors.text,
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: brandColors.white,
   },
   funnelRow: {
     flexDirection: 'row',
@@ -444,7 +466,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: brandColors.lemon,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
-  funnelLine: { flex: 1, height: 2, backgroundColor: colors.border, marginHorizontal: spacing.xs },
+  funnelLine: { flex: 1, height: 3, backgroundColor: brandColors.ink, marginHorizontal: spacing.xs },
 });

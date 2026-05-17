@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Dimensions, ScrollView, StyleSheet, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { FoodIcon, MemphisBackground } from '../../components/brand';
 import { Typography, Button } from '../../components/ui';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { useCookStore } from '../../stores/cookStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -100,8 +101,9 @@ export default function CookScreen() {
   if (showCompletion) {
     return (
       <View style={styles.completionContainer}>
-        <Typography variant="h1" style={styles.completionEmoji}>🎉</Typography>
-        <Typography variant="h2">Recipe Complete!</Typography>
+        <MemphisBackground variant="peach" density="high" />
+        <FoodIcon type="tomato" size={72} />
+        <Typography variant="h1" color={brandColors.ink} style={styles.completionTitle}>Recipe Complete!</Typography>
         <Typography variant="body" color={colors.textSecondary}>
           How did it turn out?
         </Typography>
@@ -111,7 +113,7 @@ export default function CookScreen() {
               <Ionicons
                 name={star <= rating ? 'star' : 'star-outline'}
                 size={36}
-                color={star <= rating ? colors.warning : colors.border}
+                color={star <= rating ? brandColors.lemon : colors.border}
               />
             </Pressable>
           ))}
@@ -125,6 +127,11 @@ export default function CookScreen() {
 
   return (
     <View style={styles.container}>
+      <MemphisBackground variant="cream" density="low" animated={false} />
+      <View style={styles.topCard}>
+        <Typography variant="label" color={brandColors.sky}>Cook mode</Typography>
+        <Typography variant="h2" color={brandColors.ink}>Step {currentStep + 1} of {steps.length}</Typography>
+      </View>
       {/* Progress dots */}
       <View style={styles.progressRow}>
         {steps.map((_, i) => (
@@ -148,9 +155,12 @@ export default function CookScreen() {
           <Typography variant="label" color={colors.textTertiary} style={styles.stepLabel}>
             STEP {currentStep + 1} OF {steps.length}
           </Typography>
-          <Typography variant="h2" style={styles.stepInstruction}>
-            {step.instruction}
-          </Typography>
+          <View style={styles.instructionCard}>
+            <FoodIcon type={currentStep % 2 === 0 ? 'carrot' : 'lemon'} size={62} />
+            <Typography variant="h2" color={brandColors.ink} style={styles.stepInstruction}>
+              {step.instruction}
+            </Typography>
+          </View>
 
           {/* Timer */}
           {secondsLeft !== null ? (
@@ -202,33 +212,55 @@ export default function CookScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: brandColors.cream },
+  topCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    gap: spacing.xs,
+  },
   progressRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     justifyContent: 'center',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     backgroundColor: colors.borderLight,
   },
-  dotActive: { backgroundColor: colors.primary, width: 20 },
-  dotDone: { backgroundColor: colors.primaryDark },
+  dotActive: { backgroundColor: brandColors.lemon, width: 26 },
+  dotDone: { backgroundColor: brandColors.green },
   stepContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['2xl'],
+    paddingTop: spacing.lg,
     paddingBottom: spacing['4xl'],
     gap: spacing.xl,
     alignItems: 'center',
   },
   stepLabel: { alignSelf: 'center' },
+  instructionCard: {
+    width: '100%',
+    alignItems: 'center',
+    gap: spacing.lg,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    padding: spacing['2xl'],
+  },
   stepInstruction: {
     textAlign: 'center',
     lineHeight: 32,
@@ -236,11 +268,11 @@ const styles = StyleSheet.create({
   timerCard: {
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
+    backgroundColor: brandColors.skyLight,
+    borderRadius: radii.md,
     padding: spacing['3xl'],
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
     width: '100%',
   },
   timerText: { fontSize: 56, lineHeight: 64 },
@@ -248,10 +280,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: brandColors.ink,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing['2xl'],
-    borderRadius: radii.full,
+    borderRadius: radii.md,
   },
   bottomBar: {
     flexDirection: 'row',
@@ -259,9 +291,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing['2xl'],
     paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
+    borderTopWidth: 3,
+    borderTopColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
   navBtn: { flex: 1 },
   completionContainer: {
@@ -270,9 +302,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xl,
     padding: spacing['3xl'],
-    backgroundColor: colors.background,
+    backgroundColor: brandColors.peachLight,
   },
-  completionEmoji: { fontSize: 72 },
+  completionTitle: { textAlign: 'center' },
   stars: { flexDirection: 'row', gap: spacing.md },
   doneBtn: { marginTop: spacing.xl },
 });

@@ -3,10 +3,11 @@ import { View, ScrollView, Image, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FoodIcon, MemphisBackground } from '../../components/brand';
 import { Typography, Badge, Button } from '../../components/ui';
 import { IngredientList } from '../../components/recipes/IngredientList';
 import { RecipeDetailSkeleton } from '../../components/recipes/RecipeDetailSkeleton';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { useRecipe } from '../../hooks/useRecipes';
 import { usePantryItems } from '../../hooks/usePantry';
 import { useRecipeSearch } from '../../hooks/useRecipes';
@@ -87,38 +88,42 @@ export default function RecipeDetailScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <MemphisBackground variant="cream" density="medium" animated={false} />
       {/* Header row: back + heart */}
       <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-            <Ionicons name="chevron-back" size={22} color={colors.primary} />
-            <Typography variant="bodyMedium" color={colors.primary}>Back</Typography>
+            <Ionicons name="chevron-back" size={22} color={brandColors.ink} />
+            <Typography variant="bodyMedium" color={brandColors.ink}>Back</Typography>
           </Pressable>
           <Pressable onPress={handleToggleFavorite} hitSlop={12} style={styles.heartBtn}>
             <Ionicons
               name={favorited ? 'heart' : 'heart-outline'}
               size={28}
-              color={favorited ? colors.danger : colors.textTertiary}
+              color={favorited ? brandColors.coral : brandColors.ink}
             />
           </Pressable>
         </View>
       </SafeAreaView>
 
       {/* Hero image */}
-      {recipe.imageUrl ? (
-        <Image source={{ uri: recipe.imageUrl }} style={styles.image} resizeMode="cover" />
-      ) : (
-        <View style={[styles.image, styles.imagePlaceholder]} />
-      )}
+      <View style={styles.hero}>
+        {recipe.imageUrl ? (
+          <Image source={{ uri: recipe.imageUrl }} style={styles.image} resizeMode="cover" />
+        ) : (
+          <View style={[styles.image, styles.imagePlaceholder]}>
+            <FoodIcon type="tomato" size={62} />
+            <FoodIcon type="pasta" size={76} />
+            <FoodIcon type="broccoli" size={62} />
+          </View>
+        )}
+      </View>
 
       {/* Title + meta */}
-      <View style={styles.section}>
-        <Typography variant="h2">{recipe.title}</Typography>
+      <View style={[styles.section, styles.titleCard]}>
+        <Typography variant="label" color={brandColors.sky}>Cook mode ready</Typography>
+        <Typography variant="h2" color={brandColors.ink}>{recipe.title}</Typography>
         {recipe.description ? (
           <Typography variant="body" color={colors.textSecondary} style={styles.description}>
             {recipe.description}
@@ -146,6 +151,10 @@ export default function RecipeDetailScreen() {
 
         {matchData ? (
           <View style={styles.matchCard}>
+            <View style={styles.matchHeader}>
+              <Typography variant="h3" color={brandColors.ink}>{matchData.matchScore}%</Typography>
+              <Typography variant="captionMedium" color={colors.textSecondary}>pantry match</Typography>
+            </View>
             <View style={styles.matchBarBg}>
               <View
                 style={[
@@ -154,10 +163,10 @@ export default function RecipeDetailScreen() {
                     width: `${matchData.matchScore}%` as `${number}%`,
                     backgroundColor:
                       matchData.matchScore >= 80
-                        ? colors.success
+                        ? brandColors.green
                         : matchData.matchScore >= 50
-                          ? colors.warning
-                          : colors.danger,
+                          ? brandColors.lemon
+                          : brandColors.coral,
                   },
                 ]}
               />
@@ -175,8 +184,8 @@ export default function RecipeDetailScreen() {
 
       {/* Ingredients */}
       {recipe.ingredients && recipe.ingredients.length > 0 ? (
-        <View style={styles.section}>
-          <Typography variant="h3" style={styles.sectionTitle}>Ingredients</Typography>
+        <View style={[styles.section, styles.cardSection]}>
+          <Typography variant="h3" color={brandColors.ink} style={styles.sectionTitle}>Ingredients</Typography>
           <IngredientList
             ingredients={recipe.ingredients}
             matchedNames={matchData?.matchedIngredients ?? []}
@@ -195,13 +204,13 @@ export default function RecipeDetailScreen() {
 
       {/* Steps */}
       {recipe.steps.length > 0 ? (
-        <View style={styles.section}>
-          <Typography variant="h3" style={styles.sectionTitle}>Instructions</Typography>
+        <View style={[styles.section, styles.cardSection]}>
+          <Typography variant="h3" color={brandColors.ink} style={styles.sectionTitle}>Instructions</Typography>
           <View style={styles.stepList}>
             {recipe.steps.map((step, idx) => (
               <View key={step.order ?? idx} style={styles.step}>
                 <View style={styles.stepNumber}>
-                  <Typography variant="captionMedium" color={colors.primary}>
+                  <Typography variant="captionMedium" color={brandColors.ink}>
                     {idx + 1}
                   </Typography>
                 </View>
@@ -221,8 +230,8 @@ export default function RecipeDetailScreen() {
 
       {/* Nutrition */}
       {recipe.nutritionPerServing ? (
-        <View style={styles.section}>
-          <Typography variant="h3" style={styles.sectionTitle}>Nutrition per serving</Typography>
+        <View style={[styles.section, styles.cardSection]}>
+          <Typography variant="h3" color={brandColors.ink} style={styles.sectionTitle}>Nutrition per serving</Typography>
           <View style={styles.nutritionGrid}>
             {[
               { label: 'Calories', value: recipe.nutritionPerServing.calories, unit: ' kcal' },
@@ -244,7 +253,7 @@ export default function RecipeDetailScreen() {
       ) : null}
 
       {/* CTA */}
-      <View style={styles.section}>
+      <View style={[styles.section, styles.ctaSection]}>
         <Button
           label="Start Cooking"
           onPress={handleStartCooking}
@@ -258,7 +267,7 @@ export default function RecipeDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: brandColors.cream },
   content: { paddingBottom: spacing['4xl'] },
   loading: {
     flex: 1,
@@ -268,9 +277,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerSafeArea: {
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    backgroundColor: brandColors.white,
+    borderBottomWidth: 3,
+    borderBottomColor: brandColors.ink,
   },
   headerRow: {
     flexDirection: 'row',
@@ -290,30 +299,65 @@ const styles = StyleSheet.create({
   heartBtn: {
     width: 44,
     height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.peachLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  image: { width: '100%', height: 220 },
-  imagePlaceholder: { backgroundColor: colors.surfaceSecondary },
-  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.sm },
+  hero: { padding: spacing.lg, paddingBottom: 0 },
+  image: {
+    width: '100%',
+    height: 220,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+  },
+  imagePlaceholder: {
+    backgroundColor: brandColors.skyLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  section: { marginHorizontal: spacing.lg, marginTop: spacing.lg, gap: spacing.sm },
+  titleCard: {
+    backgroundColor: brandColors.white,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    padding: spacing.lg,
+  },
+  cardSection: {
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    padding: spacing.lg,
+  },
+  ctaSection: { paddingTop: spacing.xs },
   sectionTitle: { marginBottom: spacing.xs },
   description: { lineHeight: 22 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   matchCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: brandColors.cream,
     borderRadius: radii.md,
     padding: spacing.md,
     gap: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
-  matchBarBg: { height: 6, backgroundColor: colors.borderLight, borderRadius: 3, overflow: 'hidden' },
-  matchBarFill: { height: '100%', borderRadius: 3 },
+  matchHeader: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
+  matchBarBg: { height: 8, backgroundColor: colors.borderLight, borderRadius: 999, overflow: 'hidden' },
+  matchBarFill: { height: '100%', borderRadius: 999 },
   stepList: { gap: spacing.md },
   step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   stepNumber: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: brandColors.lemon,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     alignItems: 'center', justifyContent: 'center',
     flexShrink: 0, marginTop: 1,
   },
@@ -321,11 +365,11 @@ const styles = StyleSheet.create({
   nutritionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   nutritionCell: {
     width: '30%',
-    backgroundColor: colors.surface,
+    backgroundColor: brandColors.white,
     borderRadius: radii.md,
     padding: spacing.sm,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
 });

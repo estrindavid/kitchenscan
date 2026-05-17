@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Typography } from '../ui';
-import { colors, spacing, radii } from '../ui/theme';
+import { brandColors, colors, spacing, radii } from '../ui/theme';
 import type { Ingredient } from '@kitchenscan/shared';
 import type { MissingIngredient } from '../../hooks/useRecipes';
 
@@ -22,7 +22,7 @@ const STATUS_CONFIG: Record<
   IngredientStatus,
   { icon: string; color: string; bgColor: string }
 > = {
-  matched: { icon: '✓', color: colors.success, bgColor: colors.successLight },
+  matched: { icon: '✓', color: brandColors.green, bgColor: brandColors.mint },
   substitute: { icon: '~', color: colors.warning, bgColor: colors.warningLight },
   missing: { icon: '✕', color: colors.danger, bgColor: colors.dangerLight },
   optional: { icon: '○', color: colors.textTertiary, bgColor: colors.surfaceSecondary },
@@ -114,6 +114,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: radii.md,
     padding: spacing.sm,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
   icon: {
     width: 22,
