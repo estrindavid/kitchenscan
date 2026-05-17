@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     borderWidth: 3,
     borderColor: brandColors.ink,
-    backgroundColor: brandColors.lemon,
+    backgroundColor: brandColors.skyLight,
   },
   lockBadge: {
     borderRadius: radii.md,
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: brandColors.lemon,
+    backgroundColor: brandColors.skyLight,
     borderWidth: 2,
     borderColor: brandColors.ink,
   },

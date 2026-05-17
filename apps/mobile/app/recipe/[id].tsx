@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   stepNumber: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: brandColors.lemon,
+    backgroundColor: brandColors.skyLight,
     borderWidth: 2,
     borderColor: brandColors.ink,
     alignItems: 'center', justifyContent: 'center',

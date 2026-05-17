@@ -118,7 +118,7 @@ export default function PantryScreen() {
       <View style={styles.header}>
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Typography variant="label" color={brandColors.green}>Living pantry</Typography>
+            <Typography variant="label" color={colors.primaryDark}>Living pantry</Typography>
             <Typography variant="h2" color={brandColors.ink}>My Pantry</Typography>
             <Typography variant="caption" color={colors.textSecondary}>
               {items.length} item{items.length !== 1 ? 's' : ''} ready for recipe matching
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceSecondary,
   },
-  chipSelected: { backgroundColor: brandColors.lemon, borderColor: colors.warning },
+  chipSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   sortPill: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   sortPillSelected: {
     borderColor: colors.primary,
-    backgroundColor: brandColors.mint,
+    backgroundColor: colors.primaryLight,
   },
   list: { padding: spacing.lg, paddingTop: spacing.md },
   sectionHeader: {

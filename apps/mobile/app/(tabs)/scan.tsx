@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: brandColors.green,
+    backgroundColor: colors.primary,
     borderWidth: 2,
     borderColor: brandColors.ink,
   },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   demoItemConfidence: {
     fontSize: 13,
     fontWeight: '700',
-    color: brandColors.green,
+    color: colors.primaryDark,
   },
   sessionSummary: {
     backgroundColor: brandColors.white,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   goToConfirmBtn: {
-    backgroundColor: brandColors.green,
+    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: radii.md,
     borderWidth: 3,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   goToConfirmText: {
-    color: '#fff',
+    color: brandColors.ink,
     fontSize: 15,
     fontWeight: '600',
   },

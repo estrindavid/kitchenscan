@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md, borderWidth: 2, borderColor: brandColors.ink,
     backgroundColor: brandColors.white,
   },
-  chipSelected: { backgroundColor: brandColors.lemon },
+  chipSelected: { backgroundColor: brandColors.skyLight },
   chipEmoji: { fontSize: 16 },
   chipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
   chipLabelSelected: { color: brandColors.ink },

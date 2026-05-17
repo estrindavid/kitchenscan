@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F6E56"
+      "backgroundColor": "#45B8F0"
     },
     "plugins": [
       [
@@ -35,7 +35,7 @@
       "package": "com.kitchenscan.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F6E56"
+        "backgroundColor": "#45B8F0"
       },
       "permissions": [
         "CAMERA",
