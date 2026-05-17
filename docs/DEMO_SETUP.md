@@ -11,15 +11,21 @@ Required:
 ```bash
 ROCKETRIDE_URI=http://localhost:5565
 ROCKETRIDE_APIKEY=
-ROCKETRIDE_GEMINI_API_KEY=your_gemini_key
 GOOGLE_CLOUD_PROJECT=your_google_cloud_project_id
+GOOGLE_CLOUD_LOCATION=us-central1
 PORT=3001
 HOST=0.0.0.0
 ```
 
 `ROCKETRIDE_APIKEY` is optional for a local RocketRide engine at `localhost:5565`. Fill it only if you are connecting to RocketRide Cloud or an authenticated remote engine.
 
-`GOOGLE_CLOUD_PROJECT` is optional if you are using a Gemini API key from Google AI Studio directly. Keep it if you are also showing a Google Cloud / Vertex project.
+KitchenScan now prefers Vertex AI Gemini through Application Default Credentials (ADC). Run the hackathon ADC setup command, then set `GOOGLE_CLOUD_PROJECT` to the credited Google Cloud project:
+
+```bash
+bash <(curl -sSL https://storage.googleapis.com/cloud-samples-data/adc/setup_adc.sh)
+```
+
+`ROCKETRIDE_GEMINI_API_KEY` is optional now. Keep it only as a fallback for the older Google AI Studio / Gemini Developer API path.
 
 Do not commit real keys.
 

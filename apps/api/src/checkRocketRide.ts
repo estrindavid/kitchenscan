@@ -1,12 +1,12 @@
 import './loadEnv';
 import fs from 'node:fs';
 import path from 'node:path';
+import { hasGeminiAuthConfigured } from './services/googleGemini';
 import { isLocalRocketRideUri } from './services/systemStatus';
 
 const requiredEnv = [
   'ROCKETRIDE_URI',
   ...(!isLocalRocketRideUri(process.env.ROCKETRIDE_URI) ? ['ROCKETRIDE_APIKEY'] : []),
-  'ROCKETRIDE_GEMINI_API_KEY',
 ];
 const pipelinePaths = [
   process.env.KITCHENSCAN_EXTRACT_PIPELINE
@@ -16,6 +16,9 @@ const pipelinePaths = [
 ];
 
 const missingEnv = requiredEnv.filter((key) => !process.env[key]);
+if (!hasGeminiAuthConfigured()) {
+  missingEnv.push('Gemini auth: GOOGLE_CLOUD_PROJECT with ADC or ROCKETRIDE_GEMINI_API_KEY');
+}
 const pipelines = pipelinePaths.map((pipelinePath) => ({
   path: pipelinePath,
   exists: fs.existsSync(pipelinePath),

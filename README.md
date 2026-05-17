@@ -24,15 +24,15 @@ See [docs/DEMO_SETUP.md](docs/DEMO_SETUP.md) for the exact connected-demo setup 
 
 - Mobile scanner posts captured image data and frame dimensions to `POST /detect`.
 - API routes the scan through `pipelines/extract-ingredients.pipe`, a RocketRide Gemini Vision workflow.
-- When local RocketRide/Gemini credentials are not configured, the API returns deterministic demo detections so the hackathon demo still works.
-- Run `pnpm --filter @kitchenscan/api check:rocketride` with `ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`, and `ROCKETRIDE_GEMINI_API_KEY` set to verify the RocketRide setup.
+- If RocketRide does not return output, the API uses Vertex AI Gemini through Application Default Credentials when `GOOGLE_CLOUD_PROJECT` is set.
+- Run `pnpm --filter @kitchenscan/api check:rocketride` with `ROCKETRIDE_URI` plus either Vertex ADC or `ROCKETRIDE_GEMINI_API_KEY` to verify setup.
 
 ## Sprint 3 Recipe Slice
 
 - Recipes tab calls `GET /recipes/search?ingredients=...` for pantry-aware generated recipe cards.
 - Recipe details come from `GET /recipes/:id` after a search result is generated.
 - API routes recipe generation through `pipelines/generate-recipes.pipe`, a RocketRide Gemini workflow.
-- Deterministic fallback recipes keep the demo useful before live RocketRide/Gemini credentials are configured.
+- Demo fallbacks are opt-in with `KITCHENSCAN_DEMO_AI_FALLBACK=true`; normal runs surface setup errors instead of pretending AI worked.
 
 ## Sprint 4 Usage Slice
 

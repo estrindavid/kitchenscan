@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { Detection } from '@kitchenscan/shared';
 import { AiServiceUnavailableError, shouldUseDemoAiFallback } from './aiErrors';
+import { generateGeminiContent } from './googleGemini';
 import { isLocalRocketRideUri } from './systemStatus';
 
 export interface IngredientCandidate {
@@ -136,70 +137,44 @@ export async function extractIngredientsFromImage(
 }
 
 async function executeGeminiVision(input: ExtractIngredientsInput): Promise<IngredientCandidate[]> {
-  const apiKey = process.env.ROCKETRIDE_GEMINI_API_KEY;
-  if (!apiKey || process.env.NODE_ENV === 'test') return [];
+  if (process.env.NODE_ENV === 'test') return [];
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
+    const body = await generateGeminiContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [
             {
-              role: 'user',
-              parts: [
-                {
-                  text: [
-                    'Identify visible grocery or pantry ingredients in this image.',
-                    'Return only JSON with this exact shape:',
-                    '{"ingredients":[{"name":"tomato","category":"produce","confidence":0.86,"boundingBox":{"x":0.1,"y":0.2,"width":0.25,"height":0.2}}]}',
-                    'Use relative bounding boxes from 0 to 1 when possible.',
-                    'Only include visible food, ingredients, packaged food, or pantry items.',
-                  ].join('\n'),
-                },
-                {
-                  inlineData: {
-                    mimeType: 'image/jpeg',
-                    data: input.image,
-                  },
-                },
-              ],
+              text: [
+                'Identify visible grocery or pantry ingredients in this image.',
+                'Return only JSON with this exact shape:',
+                '{"ingredients":[{"name":"tomato","category":"produce","confidence":0.86,"boundingBox":{"x":0.1,"y":0.2,"width":0.25,"height":0.2}}]}',
+                'Use relative bounding boxes from 0 to 1 when possible.',
+                'Only include visible food, ingredients, packaged food, or pantry items.',
+              ].join('\n'),
+            },
+            {
+              inlineData: {
+                mimeType: 'image/jpeg',
+                data: input.image,
+              },
             },
           ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        }),
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2,
       },
-    );
+    }, 'Ingredient detection');
 
-    if (!response.ok) {
-      throw new AiServiceUnavailableError(await readGeminiError(response, 'Ingredient detection'));
-    }
-    const body = await response.json() as unknown;
+    if (!body) return [];
     return parseGeminiCandidates(body);
   } catch (error) {
     if (error instanceof AiServiceUnavailableError) throw error;
     throw new AiServiceUnavailableError('Ingredient detection could not reach Gemini. Check network and API configuration.');
   }
-}
-
-async function readGeminiError(response: Response, prefix: string) {
-  try {
-    const body = await response.json() as { error?: { status?: string; message?: string } };
-    const status = body.error?.status;
-    const message = body.error?.message;
-    if (status === 'RESOURCE_EXHAUSTED') {
-      return `${prefix} is blocked because Gemini credits are depleted. Add credits or use a different valid Gemini key.`;
-    }
-    if (message) return `${prefix} failed: ${message}`;
-  } catch {
-    // Fall through to a generic sanitized message.
-  }
-  return `${prefix} failed with Gemini status ${response.status}.`;
 }
 
 function getPipelinePath() {

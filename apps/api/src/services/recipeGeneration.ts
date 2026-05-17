@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import type { Ingredient, Recipe, RecipeStep, SkillLevel } from '@kitchenscan/shared';
 import { AiServiceUnavailableError, shouldUseDemoAiFallback } from './aiErrors';
+import { generateGeminiContent } from './googleGemini';
 import { isLocalRocketRideUri } from './systemStatus';
 
 export interface GeneratedIngredient {
@@ -262,54 +263,28 @@ export async function generateRecipes(input: GenerateRecipesInput): Promise<Gene
 }
 
 async function executeGeminiRecipeGeneration(input: GenerateRecipesInput): Promise<GeneratedRecipe[]> {
-  const apiKey = process.env.ROCKETRIDE_GEMINI_API_KEY;
-  if (!apiKey || process.env.NODE_ENV === 'test') return [];
+  if (process.env.NODE_ENV === 'test') return [];
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: buildRecipePrompt(input) }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.45,
-          },
-        }),
+    const body = await generateGeminiContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: buildRecipePrompt(input) }],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.45,
       },
-    );
+    }, 'Recipe generation');
 
-    if (!response.ok) {
-      throw new AiServiceUnavailableError(await readGeminiError(response, 'Recipe generation'));
-    }
-    const body = await response.json() as unknown;
+    if (!body) return [];
     return parseGeminiRecipes(body);
   } catch (error) {
     if (error instanceof AiServiceUnavailableError) throw error;
     throw new AiServiceUnavailableError('Recipe generation could not reach Gemini. Check network and API configuration.');
   }
-}
-
-async function readGeminiError(response: Response, prefix: string) {
-  try {
-    const body = await response.json() as { error?: { status?: string; message?: string } };
-    const status = body.error?.status;
-    const message = body.error?.message;
-    if (status === 'RESOURCE_EXHAUSTED') {
-      return `${prefix} is blocked because Gemini credits are depleted. Add credits or use a different valid Gemini key.`;
-    }
-    if (message) return `${prefix} failed: ${message}`;
-  } catch {
-    // Fall through to a generic sanitized message.
-  }
-  return `${prefix} failed with Gemini status ${response.status}.`;
 }
 
 export function getRecipeById(id: string): RecipeDetail | undefined {
