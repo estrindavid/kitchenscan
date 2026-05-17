@@ -2,7 +2,7 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography, Badge } from '../ui';
-import { colors, spacing, radii } from '../ui/theme';
+import { brandColors, colors, spacing, radii } from '../ui/theme';
 import { useDeletePantryItem, useUpdatePantryItem } from '../../hooks/usePantry';
 import { FOOD_CATEGORIES } from '@kitchenscan/shared';
 import type { PantryItem as PantryItemType } from '@kitchenscan/shared';
@@ -64,7 +64,9 @@ export function PantryItemRow({ item, onPress }: PantryItemProps) {
             <Typography variant="h3">{categoryInfo?.icon ?? '📦'}</Typography>
           </View>
           <View style={styles.info}>
-            <Typography variant="bodyMedium">{item.displayName ?? item.name}</Typography>
+            <Typography variant="bodyMedium" color={colors.text} numberOfLines={1}>
+              {item.displayName ?? item.name}
+            </Typography>
             <Typography variant="caption" color={colors.textSecondary}>
               {item.quantity} {item.unit}
               {item.brand ? ` · ${item.brand}` : ''}
@@ -87,13 +89,17 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: spacing.md,
   },
   iconContainer: {
     width: 40,
     height: 40,
     borderRadius: radii.sm,
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: brandColors.cream,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { View, SectionList, StyleSheet, RefreshControl, TextInput, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
+import { FoodIcon } from '../../components/brand';
 import { Button, Typography, Badge } from '../../components/ui';
 import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { PantryItemRow } from '../../components/pantry/PantryItem';
@@ -114,23 +114,24 @@ export default function PantryScreen() {
 
   return (
     <View style={styles.container}>
-      <MemphisBackground variant="cream" density="low" animated={false} />
       {/* Header */}
       <View style={styles.header}>
-        <BrandHeader
-          eyebrow="Living pantry"
-          title="My Pantry"
-          subtitle={`${items.length} item${items.length !== 1 ? 's' : ''} ready for recipe matching`}
-          accent="mint"
-          accessory={<FoodIcon type="can" size={58} />}
-        />
-
-        <Button
-          label="Add"
-          size="sm"
-          onPress={() => setShowAddSheet(true)}
-          icon={<Ionicons name="add" size={16} color="#FFFFFF" />}
-        />
+        <View style={styles.heroCard}>
+          <View style={styles.heroCopy}>
+            <Typography variant="label" color={brandColors.green}>Living pantry</Typography>
+            <Typography variant="h2" color={brandColors.ink}>My Pantry</Typography>
+            <Typography variant="caption" color={colors.textSecondary}>
+              {items.length} item{items.length !== 1 ? 's' : ''} ready for recipe matching
+            </Typography>
+          </View>
+          <FoodIcon type="can" size={48} />
+          <Button
+            label="Add"
+            size="sm"
+            onPress={() => setShowAddSheet(true)}
+            icon={<Ionicons name="add" size={16} color="#FFFFFF" />}
+          />
+        </View>
 
         {/* Search */}
         <View style={styles.searchWrap}>
@@ -157,7 +158,7 @@ export default function PantryScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? brandColors.ink : colors.textSecondary}
+                  color={selected ? brandColors.ink : colors.text}
                 >
                   {label}
                 </Typography>
@@ -178,7 +179,7 @@ export default function PantryScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? brandColors.ink : colors.textTertiary}
+                  color={selected ? brandColors.ink : colors.text}
                 >
                   {label}
                 </Typography>
@@ -201,7 +202,7 @@ export default function PantryScreen() {
         }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
-            <Typography variant="captionMedium" color={brandColors.ink}>{section.title}</Typography>
+            <Typography variant="captionMedium" color={colors.text}>{section.title}</Typography>
             <Badge label={`${section.count}`} />
           </View>
         )}
@@ -225,26 +226,41 @@ export default function PantryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: brandColors.cream },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: 'rgba(255,247,232,0.96)',
-    borderBottomWidth: 3,
-    borderBottomColor: brandColors.ink,
-    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  heroCard: {
+    minHeight: 86,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: brandColors.cream,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
+  },
+  heroCopy: {
+    flex: 1,
+    gap: 2,
   },
   searchWrap: {
     minHeight: 42,
-    borderWidth: 2,
-    borderColor: brandColors.ink,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: brandColors.white,
+    backgroundColor: colors.surfaceSecondary,
   },
   searchInput: {
     flex: 1,
@@ -258,32 +274,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: brandColors.ink,
-    backgroundColor: brandColors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
   },
-  chipSelected: { backgroundColor: brandColors.lemon, borderColor: brandColors.ink },
+  chipSelected: { backgroundColor: brandColors.lemon, borderColor: colors.warning },
   sortPill: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.md,
-    borderWidth: 2,
-    borderColor: brandColors.ink,
-    backgroundColor: brandColors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
   },
   sortPillSelected: {
-    borderColor: brandColors.ink,
+    borderColor: colors.primary,
     backgroundColor: brandColors.mint,
   },
-  list: { padding: spacing.lg, paddingTop: spacing.sm },
+  list: { padding: spacing.lg, paddingTop: spacing.md },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 0,
     borderRadius: radii.md,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: 'transparent',
   },
   separator: { height: spacing.xs },
   sectionSeparator: { height: spacing.lg },
