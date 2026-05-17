@@ -160,18 +160,24 @@ export default function RecipesScreen() {
           icon="🍽️"
           title="Your pantry is empty"
           subtitle="Scan food items or add them manually to see matching recipes."
+          titleColor={brandColors.ink}
+          subtitleColor={colors.text}
         />
       ) : !hasRequestedRecipes ? (
         <EmptyState
           icon="✨"
           title="Ready when you are"
           subtitle="Tap Find me recipes to ask RocketRide and Gemini for meals using your pantry."
+          titleColor={brandColors.ink}
+          subtitleColor={colors.text}
         />
       ) : recipes.length === 0 ? (
         <EmptyState
           icon="🔍"
           title="No matching recipes"
           subtitle="Try removing filters, or add more items to your pantry."
+          titleColor={brandColors.ink}
+          subtitleColor={colors.text}
         />
       ) : (
         <FlatList
@@ -201,18 +207,18 @@ function getRecipeErrorMessage(error: unknown) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: brandColors.skyLight,
+    backgroundColor: '#EAF8FF',
   },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: 'rgba(191,234,255,0.95)',
+    backgroundColor: 'rgba(234,248,255,0.96)',
   },
   filters: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
-    backgroundColor: 'rgba(191,234,255,0.95)',
+    backgroundColor: 'rgba(234,248,255,0.96)',
     borderBottomWidth: 3,
     borderBottomColor: brandColors.ink,
     gap: spacing.sm,
