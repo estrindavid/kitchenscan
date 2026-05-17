@@ -84,11 +84,24 @@ describe('pantry routes', () => {
       url: `/pantry/items/${addBody.data.id}`,
       payload: { quantity: 2, status: 'used_up' },
     });
-    const patchBody = JSON.parse(patchRes.body) as { data: { quantity: number; status: string } };
+    const patchBody = JSON.parse(patchRes.body) as { data: { quantity: number; status: string; usedAt?: string } };
 
     expect(patchRes.statusCode).toBe(200);
     expect(patchBody.data.quantity).toBe(2);
     expect(patchBody.data.status).toBe('used_up');
+    expect(patchBody.data.usedAt).toBeTruthy();
+
+    const zeroRes = await app.inject({
+      method: 'PATCH',
+      url: `/pantry/items/${addBody.data.id}`,
+      payload: { quantity: 0 },
+    });
+    const zeroBody = JSON.parse(zeroRes.body) as { data: { quantity: number; status: string; usedAt?: string } };
+
+    expect(zeroRes.statusCode).toBe(200);
+    expect(zeroBody.data.quantity).toBe(0);
+    expect(zeroBody.data.status).toBe('used_up');
+    expect(zeroBody.data.usedAt).toBeTruthy();
 
     const deleteRes = await app.inject({
       method: 'DELETE',

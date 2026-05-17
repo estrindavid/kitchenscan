@@ -6,18 +6,23 @@ import { FoodIcon, MemphisBackground } from '../../components/brand';
 import { Typography, Button } from '../../components/ui';
 import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { useCookStore } from '../../stores/cookStore';
+import { usePantryItems, useUpdatePantryItem } from '../../hooks/usePantry';
+import type { Ingredient, PantryItem } from '@kitchenscan/shared';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { steps, currentStep, nextStep, prevStep, endSession } = useCookStore();
+  const { steps, ingredients, currentStep, nextStep, prevStep, endSession } = useCookStore();
+  const { data: pantryItems = [] } = usePantryItems();
+  const updatePantryItem = useUpdatePantryItem();
 
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [rating, setRating] = useState(0);
+  const [depletionDraft, setDepletionDraft] = useState<DepletionDraft[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const slideX = useRef(new Animated.Value(0)).current;
 
@@ -41,6 +46,11 @@ export default function CookScreen() {
       router.back();
     }
   }, []);
+
+  useEffect(() => {
+    if (!showCompletion) return;
+    setDepletionDraft(buildDepletionDraft(ingredients, pantryItems));
+  }, [showCompletion, ingredients, pantryItems]);
 
   function clearTimer() {
     if (intervalRef.current) {
@@ -85,9 +95,37 @@ export default function CookScreen() {
     }
   }
 
-  function handleFinish() {
+  async function handleFinish() {
+    const usedAt = new Date().toISOString();
+    const updates = depletionDraft
+      .filter((draft) => draft.action !== 'skip')
+      .map((draft) => {
+        if (draft.action === 'used_all') {
+          return updatePantryItem.mutateAsync({
+            id: draft.pantryItem.id,
+            quantity: 0,
+            status: 'used_up',
+            usedAt,
+          });
+        }
+
+        const nextQuantity = Math.max(0, draft.pantryItem.quantity - draft.amount);
+        return updatePantryItem.mutateAsync({
+          id: draft.pantryItem.id,
+          quantity: nextQuantity,
+          ...(nextQuantity === 0 ? { status: 'used_up' as const, usedAt } : {}),
+        });
+      });
+
+    await Promise.allSettled(updates);
     endSession();
     router.back();
+  }
+
+  function updateDraft(id: string, updates: Partial<Pick<DepletionDraft, 'action' | 'amount'>>) {
+    setDepletionDraft((current) => current.map((draft) => (
+      draft.pantryItem.id === id ? { ...draft, ...updates } : draft
+    )));
   }
 
   function formatTime(secs: number) {
@@ -118,8 +156,81 @@ export default function CookScreen() {
             </Pressable>
           ))}
         </View>
+        <View style={styles.depletionCard}>
+          <Typography variant="h3" color={brandColors.ink}>Update pantry?</Typography>
+          <Typography variant="caption" color={colors.textSecondary}>
+            Mark what you used so recipes stay matched to what is actually home.
+          </Typography>
+          {depletionDraft.length > 0 ? (
+            <View style={styles.depletionList}>
+              {depletionDraft.map((draft) => (
+                <View key={draft.pantryItem.id} style={styles.depletionRow}>
+                  <View style={styles.depletionInfo}>
+                    <Typography variant="bodyMedium" color={brandColors.ink} numberOfLines={1}>
+                      {draft.pantryItem.displayName ?? draft.pantryItem.name}
+                    </Typography>
+                    <Typography variant="caption" color={colors.textSecondary}>
+                      {draft.pantryItem.quantity} {draft.pantryItem.unit} in pantry
+                    </Typography>
+                  </View>
+                  <View style={styles.depletionControls}>
+                    <Pressable
+                      style={[styles.depletionChip, draft.action === 'skip' && styles.depletionChipActive]}
+                      onPress={() => updateDraft(draft.pantryItem.id, { action: 'skip' })}
+                    >
+                      <Typography variant="captionMedium" color={brandColors.ink}>Skip</Typography>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.depletionChip, draft.action === 'decrement' && styles.depletionChipActive]}
+                      onPress={() => updateDraft(draft.pantryItem.id, { action: 'decrement' })}
+                    >
+                      <Typography variant="captionMedium" color={brandColors.ink}>Use some</Typography>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.depletionChip, draft.action === 'used_all' && styles.depletionChipActive]}
+                      onPress={() => updateDraft(draft.pantryItem.id, { action: 'used_all' })}
+                    >
+                      <Typography variant="captionMedium" color={brandColors.ink}>All</Typography>
+                    </Pressable>
+                  </View>
+                  {draft.action === 'decrement' ? (
+                    <View style={styles.amountStepper}>
+                      <Pressable
+                        style={[styles.amountButton, draft.amount <= 1 && styles.amountButtonDisabled]}
+                        disabled={draft.amount <= 1}
+                        onPress={() => updateDraft(draft.pantryItem.id, { amount: Math.max(1, draft.amount - 1) })}
+                      >
+                        <Ionicons name="remove" size={14} color={draft.amount <= 1 ? colors.textTertiary : brandColors.ink} />
+                      </Pressable>
+                      <Typography variant="captionMedium" color={brandColors.ink}>
+                        Use {draft.amount} {draft.pantryItem.unit}
+                      </Typography>
+                      <Pressable
+                        style={[styles.amountButton, draft.amount >= draft.pantryItem.quantity && styles.amountButtonDisabled]}
+                        disabled={draft.amount >= draft.pantryItem.quantity}
+                        onPress={() => updateDraft(draft.pantryItem.id, { amount: Math.min(draft.pantryItem.quantity, draft.amount + 1) })}
+                      >
+                        <Ionicons name="add" size={14} color={draft.amount >= draft.pantryItem.quantity ? colors.textTertiary : brandColors.ink} />
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Typography variant="caption" color={colors.textSecondary}>
+              No matched pantry ingredients were found for this recipe.
+            </Typography>
+          )}
+        </View>
         <View style={styles.doneBtn}>
-          <Button label="Done" onPress={handleFinish} fullWidth size="lg" />
+          <Button
+            label={updatePantryItem.isPending ? 'Updating pantry...' : 'Update Pantry & Done'}
+            onPress={() => { void handleFinish(); }}
+            loading={updatePantryItem.isPending}
+            fullWidth
+            size="lg"
+          />
         </View>
       </View>
     );
@@ -209,6 +320,54 @@ export default function CookScreen() {
       </View>
     </View>
   );
+}
+
+type DepletionAction = 'skip' | 'decrement' | 'used_all';
+
+interface DepletionDraft {
+  ingredient: Ingredient;
+  pantryItem: PantryItem;
+  action: DepletionAction;
+  amount: number;
+}
+
+function buildDepletionDraft(ingredients: Ingredient[], pantryItems: PantryItem[]): DepletionDraft[] {
+  const activePantry = pantryItems.filter((item) => item.status !== 'used_up');
+  const matchedIds = new Set<string>();
+
+  return ingredients
+    .filter((ingredient) => !ingredient.isOptional && !ingredient.isGarnish)
+    .flatMap((ingredient) => {
+      const pantryItem = activePantry.find((item) => {
+        if (matchedIds.has(item.id)) return false;
+        return namesMatch(ingredient.canonicalName, item.name)
+          || namesMatch(ingredient.canonicalName, item.displayName ?? '');
+      });
+      if (!pantryItem) return [];
+
+      matchedIds.add(pantryItem.id);
+      return [{
+        ingredient,
+        pantryItem,
+        action: pantryItem.quantity <= 1 ? 'used_all' : 'decrement',
+        amount: 1,
+      } satisfies DepletionDraft];
+    });
+}
+
+function namesMatch(left: string, right: string) {
+  const a = normalizeName(left);
+  const b = normalizeName(right);
+  if (!a || !b) return false;
+  return a === b || singularize(a) === singularize(b);
+}
+
+function normalizeName(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+}
+
+function singularize(value: string) {
+  return value.endsWith('s') ? value.slice(0, -1) : value;
 }
 
 const styles = StyleSheet.create({
@@ -306,5 +465,63 @@ const styles = StyleSheet.create({
   },
   completionTitle: { textAlign: 'center' },
   stars: { flexDirection: 'row', gap: spacing.md },
-  doneBtn: { marginTop: spacing.xl },
+  depletionCard: {
+    width: '100%',
+    maxWidth: 520,
+    gap: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    padding: spacing.lg,
+  },
+  depletionList: {
+    gap: spacing.sm,
+  },
+  depletionRow: {
+    gap: spacing.sm,
+    borderRadius: radii.sm,
+    backgroundColor: colors.surfaceSecondary,
+    padding: spacing.md,
+  },
+  depletionInfo: {
+    gap: 2,
+  },
+  depletionControls: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  depletionChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    backgroundColor: brandColors.white,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  depletionChipActive: {
+    backgroundColor: brandColors.skyLight,
+    borderColor: brandColors.ink,
+  },
+  amountStepper: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  amountButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: brandColors.white,
+  },
+  amountButtonDisabled: {
+    backgroundColor: colors.surfaceSecondary,
+    borderColor: colors.borderLight,
+  },
+  doneBtn: { marginTop: spacing.sm, width: '100%', maxWidth: 520 },
 });

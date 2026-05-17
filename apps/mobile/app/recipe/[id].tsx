@@ -83,7 +83,7 @@ export default function RecipeDetailScreen() {
       recipeId: recipe.id,
       stepCount: recipe.steps.length,
     });
-    startSession(recipe.id, recipe.steps);
+    startSession(recipe.id, recipe.steps, recipe.ingredients ?? []);
     router.push(`/cook/${recipe.id}`);
   }
 

@@ -75,10 +75,11 @@ const addPantryItemSchema = z.object({
 
 const updatePantryItemSchema = z.object({
   name: z.string().trim().min(1).optional(),
-  quantity: z.number().positive().optional(),
+  quantity: z.number().min(0).optional(),
   unit: z.string().trim().min(1).optional(),
   status: z.enum(['fresh', 'expiring_soon', 'expired', 'used_up']).optional(),
   expiryDate: z.string().trim().min(1).optional(),
+  usedAt: z.string().trim().min(1).optional(),
 });
 
 const pantryListQuerySchema = z.object({
