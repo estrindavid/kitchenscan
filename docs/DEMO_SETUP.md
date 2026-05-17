@@ -2,6 +2,12 @@
 
 Use this checklist before presenting.
 
+## 0. Submission Materials
+
+- Repo: https://github.com/estrindavid/kitchenscan
+- Form-ready copy: [docs/HACKATHON_SUBMISSION.md](HACKATHON_SUBMISSION.md)
+- Required judging story: scan food, confirm pantry, generate recipes, cook, mark used-up items, show impact metrics.
+
 ## 1. Add Required Keys
 
 Edit `.env` in the repo root.
@@ -33,9 +39,10 @@ Do not commit real keys.
 
 ```bash
 pnpm --filter @kitchenscan/api check:rocketride
+pnpm demo:check
 ```
 
-Expected: `"ok": true`.
+Expected: `"ok": true` from the RocketRide check and `Ready for the connected demo.` from the readiness check.
 
 ## 3. Start The Demo
 
@@ -63,17 +70,46 @@ Scan the QR code from Expo Go.
 
 ```bash
 pnpm demo:check
+pnpm typecheck
+pnpm --filter @kitchenscan/api test
 ```
 
 In the app, open Profile and look at **Demo Readiness**.
 
 ## 5. Pitch Flow
 
-1. Scan or simulate pantry ingredients.
-2. Confirm items into pantry.
-3. Generate recipes from pantry.
-4. Open Profile.
-5. Show Demo Readiness, Impact Snapshot, Validation, and Tester Feedback.
+1. Start from the welcome screen.
+2. Scan real pantry ingredients.
+3. Confirm items into pantry.
+4. Generate recipes from pantry.
+5. Open a recipe and show cook steps.
+6. Mark used ingredients as used up.
+7. Open Profile.
+8. Show Demo Readiness, Impact Snapshot, Validation, and Tester Feedback.
+
+## 6. Recording Notes
+
+The app is configured to start on the welcome screen when Expo loads. If the phone opens to a stale screen, fully close Expo Go, reopen the project, or press reload in the Expo dev menu.
+
+Suggested 45-second demo recording:
+
+1. Welcome screen.
+2. Scan page camera capture.
+3. Ingredient review and save.
+4. Pantry populated.
+5. Recipes tab and **Find me recipes**.
+6. Recipe detail.
+7. Profile impact snapshot.
+
+## 7. Submission Sanity Check
+
+Before submitting:
+
+1. Confirm the repo is pushed to `master`.
+2. Confirm `.env` is not committed.
+3. Confirm `README.md` explains RocketRide and Google Cloud usage.
+4. Confirm `docs/HACKATHON_SUBMISSION.md` has the project summary and pitch script.
+5. Confirm the demo video starts on the welcome screen and shows the live AI path.
 
 ## Backup Plan
 
