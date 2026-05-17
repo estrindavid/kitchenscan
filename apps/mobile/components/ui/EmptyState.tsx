@@ -37,9 +37,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing['3xl'],
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  icon: { fontSize: 56, textAlign: 'center' },
+  icon: { fontSize: 46, textAlign: 'center', marginBottom: spacing.xs },
   title: { textAlign: 'center' },
-  subtitle: { textAlign: 'center', lineHeight: 22 },
+  subtitle: {
+    maxWidth: 280,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });

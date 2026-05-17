@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
+import { BrandHeader, FoodIcon } from '../../components/brand';
 import { Button, Typography } from '../../components/ui';
 import { RecipeCard } from '../../components/recipes/RecipeCard';
 import { RecipeCardSkeleton } from '../../components/recipes/RecipeCardSkeleton';
@@ -61,7 +61,6 @@ export default function RecipesScreen() {
 
   return (
     <View style={styles.container}>
-      <MemphisBackground variant="sky" density="low" animated={false} />
       {/* Header */}
       <View style={styles.header}>
         <BrandHeader
@@ -156,29 +155,35 @@ export default function RecipesScreen() {
           </Typography>
         </View>
       ) : pantryItems.length === 0 ? (
-        <EmptyState
-          icon="🍽️"
-          title="Your pantry is empty"
-          subtitle="Scan food items or add them manually to see matching recipes."
-          titleColor={brandColors.ink}
-          subtitleColor={colors.text}
-        />
+        <View style={styles.emptyPanel}>
+          <EmptyState
+            icon="🍽️"
+            title="Your pantry is empty"
+            subtitle="Scan food items or add them manually to see matching recipes."
+            titleColor={brandColors.ink}
+            subtitleColor={colors.text}
+          />
+        </View>
       ) : !hasRequestedRecipes ? (
-        <EmptyState
-          icon="✨"
-          title="Ready when you are"
-          subtitle="Tap Find me recipes to ask RocketRide and Gemini for meals using your pantry."
-          titleColor={brandColors.ink}
-          subtitleColor={colors.text}
-        />
+        <View style={styles.emptyPanel}>
+          <EmptyState
+            icon="✨"
+            title="Ready when you are"
+            subtitle="Tap Find me recipes to ask RocketRide and Gemini for meals using your pantry."
+            titleColor={brandColors.ink}
+            subtitleColor={colors.text}
+          />
+        </View>
       ) : recipes.length === 0 ? (
-        <EmptyState
-          icon="🔍"
-          title="No matching recipes"
-          subtitle="Try removing filters, or add more items to your pantry."
-          titleColor={brandColors.ink}
-          subtitleColor={colors.text}
-        />
+        <View style={styles.emptyPanel}>
+          <EmptyState
+            icon="🔍"
+            title="No matching recipes"
+            subtitle="Try removing filters, or add more items to your pantry."
+            titleColor={brandColors.ink}
+            subtitleColor={colors.text}
+          />
+        </View>
       ) : (
         <FlatList
           data={recipes}
@@ -271,11 +276,13 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
     gap: spacing.md,
   },
-  emptyTitle: {
-    textAlign: 'center',
-  },
-  emptyDesc: {
-    textAlign: 'center',
-    lineHeight: 22,
+  emptyPanel: {
+    flex: 1,
+    margin: spacing.lg,
+    borderRadius: radii.lg,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderWidth: 2,
+    borderColor: 'rgba(16,22,47,0.12)',
+    overflow: 'hidden',
   },
 });
