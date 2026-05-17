@@ -1,3 +1,5 @@
+import { getGoogleCloudProject, hasGeminiAuthConfigured } from './googleGemini';
+
 export interface PipelineStatus {
   name: string;
   exists: boolean;
@@ -24,7 +26,7 @@ export interface SystemStatus {
   google: {
     configured: boolean;
     geminiKeyConfigured: boolean;
-    /** Optional when using Gemini API keys directly; useful if demoing Vertex/Google Cloud. */
+    vertexAdcConfigured: boolean;
     projectConfigured: boolean;
   };
   pipelineFilesReady: boolean;
@@ -40,13 +42,14 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
   const apiKeyRequired = rocketride.uriConfigured && !isLocalRocketRideUri(input.env.ROCKETRIDE_URI);
   const google = {
     geminiKeyConfigured: Boolean(input.env.ROCKETRIDE_GEMINI_API_KEY),
-    projectConfigured: Boolean(input.env.GOOGLE_CLOUD_PROJECT),
+    vertexAdcConfigured: Boolean(getGoogleCloudProject(input.env)),
+    projectConfigured: Boolean(getGoogleCloudProject(input.env)),
   };
   const pipelineFilesReady = input.pipelines.every((pipeline) => pipeline.exists);
   const missing = [
     ...missingEnv('ROCKETRIDE_URI', rocketride.uriConfigured),
     ...missingEnv('ROCKETRIDE_APIKEY', !apiKeyRequired || rocketride.apiKeyConfigured),
-    ...missingEnv('ROCKETRIDE_GEMINI_API_KEY', google.geminiKeyConfigured),
+    ...missingEnv('Gemini auth: GOOGLE_CLOUD_PROJECT with ADC or ROCKETRIDE_GEMINI_API_KEY', hasGeminiAuthConfigured(input.env)),
     ...input.pipelines
       .filter((pipeline) => !pipeline.exists)
       .map((pipeline) => `pipeline:${pipeline.name}`),
@@ -65,7 +68,7 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
     },
     google: {
       ...google,
-      configured: google.geminiKeyConfigured,
+      configured: hasGeminiAuthConfigured(input.env),
     },
     pipelineFilesReady,
     pipelines: input.pipelines,

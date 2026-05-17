@@ -14,7 +14,7 @@ export function Badge({ label, variant = 'default' }: BadgeProps) {
 
   const BADGE_COLORS: Record<BadgeVariant, { bg: string; text: string }> = {
     default: { bg: c.surfaceSecondary, text: c.textSecondary },
-    primary: { bg: c.primary, text: '#FFFFFF' },
+    primary: { bg: c.primary, text: c.text },
     success: { bg: c.successLight, text: c.success },
     warning: { bg: c.warningLight, text: c.warning },
     danger: { bg: c.dangerLight, text: c.danger },

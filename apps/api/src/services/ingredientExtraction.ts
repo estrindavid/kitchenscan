@@ -1,5 +1,7 @@
 import path from 'node:path';
 import type { Detection } from '@kitchenscan/shared';
+import { AiServiceUnavailableError, shouldUseDemoAiFallback } from './aiErrors';
+import { generateGeminiContent } from './googleGemini';
 import { isLocalRocketRideUri } from './systemStatus';
 
 export interface IngredientCandidate {
@@ -48,6 +50,9 @@ interface RocketRideClientLike {
 
 const PIPELINE_NAME = 'extract-ingredients.pipe';
 const DEFAULT_MODEL_VERSION = 'gemini-2.5-flash-via-rocketride';
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const DEFAULT_ROCKETRIDE_DETECTION_TIMEOUT_MS = 3500;
+const DEFAULT_GEMINI_DETECTION_TIMEOUT_MS = 35000;
 
 const fallbackCandidates: IngredientCandidate[] = [
   { name: 'Tomatoes', category: 'produce', confidence: 0.87, boundingBox: { x: 0.1, y: 0.2, width: 0.28, height: 0.24 } },
@@ -83,7 +88,11 @@ export async function extractIngredientsFromImage(
   input: ExtractIngredientsInput,
 ): Promise<ExtractIngredientsResult> {
   const pipelinePath = getPipelinePath();
-  const rocketRideResult = await executeRocketRidePipeline(pipelinePath, input);
+  const rocketRideResult = await withFallbackTimeout(
+    executeRocketRidePipeline(pipelinePath, input),
+    getPositiveIntEnv('ROCKETRIDE_DETECTION_TIMEOUT_MS', DEFAULT_ROCKETRIDE_DETECTION_TIMEOUT_MS),
+    [],
+  );
 
   if (rocketRideResult.length > 0) {
     return {
@@ -99,17 +108,87 @@ export async function extractIngredientsFromImage(
     };
   }
 
+  const geminiResult = await executeGeminiVision(input);
+  if (geminiResult.length > 0) {
+    return {
+      detections: normalizeIngredientCandidates(geminiResult, input.imageSize)
+        .filter((detection) => detection.confidence >= input.minConfidence)
+        .slice(0, input.maxDetections),
+      modelVersion: `${GEMINI_MODEL}:direct`,
+      pipeline: {
+        provider: 'Gemini direct fallback',
+        name: PIPELINE_NAME,
+        usedFallback: true,
+      },
+    };
+  }
+
+  if (shouldUseDemoAiFallback()) {
+    return {
+      detections: normalizeIngredientCandidates(fallbackCandidates, input.imageSize)
+        .filter((detection) => detection.confidence >= input.minConfidence)
+        .slice(0, input.maxDetections),
+      modelVersion: `${DEFAULT_MODEL_VERSION}:demo-fallback`,
+      pipeline: {
+        provider: 'RocketRide + Gemini',
+        name: PIPELINE_NAME,
+        usedFallback: true,
+      },
+    };
+  }
+
   return {
-    detections: normalizeIngredientCandidates(fallbackCandidates, input.imageSize)
-      .filter((detection) => detection.confidence >= input.minConfidence)
-      .slice(0, input.maxDetections),
-    modelVersion: `${DEFAULT_MODEL_VERSION}:demo-fallback`,
+    detections: [],
+    modelVersion: `${GEMINI_MODEL}:direct`,
     pipeline: {
-      provider: 'RocketRide + Gemini',
+      provider: 'Gemini direct fallback',
       name: PIPELINE_NAME,
       usedFallback: true,
     },
   };
+}
+
+async function executeGeminiVision(input: ExtractIngredientsInput): Promise<IngredientCandidate[]> {
+  if (process.env.NODE_ENV === 'test') return [];
+
+  try {
+    const body = await generateGeminiContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: [
+                'Identify visible grocery or pantry ingredients in this image.',
+                'Return only JSON with this exact shape:',
+                '{"ingredients":[{"name":"tomato","category":"produce","confidence":0.86,"boundingBox":{"x":0.1,"y":0.2,"width":0.25,"height":0.2}}]}',
+                'Use relative bounding boxes from 0 to 1 when possible.',
+                'Only include visible food, ingredients, packaged food, or pantry items.',
+                `Return no more than ${input.maxDetections} distinct high-confidence items.`,
+              ].join('\n'),
+            },
+            {
+              inlineData: {
+                mimeType: 'image/jpeg',
+                data: input.image,
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+      },
+    }, 'Ingredient detection', getPositiveIntEnv('GEMINI_DETECTION_TIMEOUT_MS', DEFAULT_GEMINI_DETECTION_TIMEOUT_MS));
+
+    if (!body) return [];
+    return parseGeminiCandidates(body);
+  } catch (error) {
+    if (error instanceof AiServiceUnavailableError) throw error;
+    throw new AiServiceUnavailableError('Ingredient detection could not reach Gemini. Check network and API configuration.');
+  }
 }
 
 function getPipelinePath() {
@@ -159,6 +238,24 @@ function canAttemptRocketRide() {
   return Boolean(process.env.ROCKETRIDE_APIKEY) || isLocalRocketRideUri(process.env.ROCKETRIDE_URI);
 }
 
+function withFallbackTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(() => resolve(fallback))
+      .finally(() => clearTimeout(timer));
+  });
+}
+
+function getPositiveIntEnv(name: string, fallback: number) {
+  const value = process.env[name];
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 function parseRocketRideCandidates(response: unknown): IngredientCandidate[] {
   const parsed = parseJsonLike(response);
   if (Array.isArray(parsed)) return parsed as IngredientCandidate[];
@@ -173,6 +270,22 @@ function parseRocketRideCandidates(response: unknown): IngredientCandidate[] {
   }
 
   return [];
+}
+
+function parseGeminiCandidates(response: unknown): IngredientCandidate[] {
+  if (!isRecord(response)) return [];
+  const candidates = response.candidates;
+  if (!Array.isArray(candidates)) return [];
+  const text = candidates
+    .flatMap((candidate) => {
+      if (!isRecord(candidate.content)) return [];
+      const parts = candidate.content.parts;
+      if (!Array.isArray(parts)) return [];
+      return parts.flatMap((part) => isRecord(part) && typeof part.text === 'string' ? [part.text] : []);
+    })
+    .join('\n');
+
+  return parseRocketRideCandidates(text);
 }
 
 function parseJsonLike(value: unknown): unknown {

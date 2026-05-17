@@ -7,14 +7,23 @@ interface EmptyStateProps {
   title: string;
   subtitle: string;
   action?: { label: string; onPress: () => void };
+  titleColor?: string;
+  subtitleColor?: string;
 }
 
-export function EmptyState({ icon, title, subtitle, action }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  subtitle,
+  action,
+  titleColor = colors.textSecondary,
+  subtitleColor = colors.textTertiary,
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
       <Typography variant="h1" style={styles.icon}>{icon}</Typography>
-      <Typography variant="h3" color={colors.textSecondary} style={styles.title}>{title}</Typography>
-      <Typography variant="body" color={colors.textTertiary} style={styles.subtitle}>{subtitle}</Typography>
+      <Typography variant="h3" color={titleColor} style={styles.title}>{title}</Typography>
+      <Typography variant="body" color={subtitleColor} style={styles.subtitle}>{subtitle}</Typography>
       {action ? (
         <Button label={action.label} onPress={action.onPress} size="md" />
       ) : null}
@@ -28,9 +37,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing['3xl'],
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  icon: { fontSize: 56, textAlign: 'center' },
+  icon: { fontSize: 46, textAlign: 'center', marginBottom: spacing.xs },
   title: { textAlign: 'center' },
-  subtitle: { textAlign: 'center', lineHeight: 22 },
+  subtitle: {
+    maxWidth: 280,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });

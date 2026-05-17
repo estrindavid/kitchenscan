@@ -4,6 +4,8 @@ import { trackEvent } from '../services/analytics';
 import type { Recipe, Ingredient } from '@kitchenscan/shared';
 import { SEED_RECIPES } from '../data/seedRecipes';
 
+declare const process: { env?: Record<string, string | undefined> };
+
 export interface MissingIngredient {
   name: string;
   isOptional: boolean;
@@ -89,6 +91,14 @@ function computeLocalMatches(
   return { recipes: paginated, total: results.length, offset, limit };
 }
 
+function getRecipeSearchErrorMessage(error: unknown) {
+  const maybeAxios = error as { code?: string; message?: string } | undefined;
+  if (maybeAxios?.code === 'ECONNABORTED') {
+    return 'Recipe generation took too long. Check that the API terminal is still running, then try again.';
+  }
+  return maybeAxios?.message ?? 'Recipe generation failed.';
+}
+
 interface RecipeSearchFilters {
   dietary?: string[];
   maxCookTime?: number;
@@ -96,6 +106,10 @@ interface RecipeSearchFilters {
   difficulty?: string;
   limit?: number;
   offset?: number;
+}
+
+interface RecipeSearchOptions {
+  enabled?: boolean;
 }
 
 interface RecipeSearchResponse {
@@ -108,6 +122,7 @@ interface RecipeSearchResponse {
 export function useRecipeSearch(
   ingredientNames: string[],
   filters: RecipeSearchFilters = {},
+  options: RecipeSearchOptions = {},
 ) {
   return useQuery({
     queryKey: ['recipes', 'search', ingredientNames, filters],
@@ -126,6 +141,7 @@ export function useRecipeSearch(
       try {
         const { data } = await api.get<{ data: RecipeSearchResponse }>(
           `/recipes/search?${params}`,
+          { timeout: 30000 },
         );
         void trackEvent('recipe_search_viewed', {
           pantryItemCount: ingredientNames.length,
@@ -133,7 +149,11 @@ export function useRecipeSearch(
           source: 'api',
         });
         return data.data;
-      } catch {
+      } catch (error) {
+        if (process.env?.EXPO_PUBLIC_DEMO_RECIPE_FALLBACK !== 'true') {
+          throw error;
+        }
+        console.warn(getRecipeSearchErrorMessage(error));
         const fallback = computeLocalMatches(ingredientNames, filters);
         void trackEvent('recipe_search_viewed', {
           pantryItemCount: ingredientNames.length,
@@ -143,7 +163,8 @@ export function useRecipeSearch(
         return fallback;
       }
     },
-    enabled: ingredientNames.length > 0,
+    enabled: ingredientNames.length > 0 && options.enabled !== false,
+    retry: false,
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -152,8 +173,14 @@ export function useRecipe(id: string | null) {
   return useQuery({
     queryKey: ['recipes', 'detail', id],
     queryFn: async () => {
-      const { data } = await api.get<{ data: RecipeDetail }>(`/recipes/${id}`);
-      return data.data;
+      try {
+        const { data } = await api.get<{ data: RecipeDetail }>(`/recipes/${id}`);
+        return data.data;
+      } catch (error) {
+        const localRecipe = SEED_RECIPES.find((recipe) => recipe.id === id);
+        if (localRecipe) return localRecipe;
+        throw error;
+      }
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 30,

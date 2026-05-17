@@ -1,3 +1,4 @@
+import { cloneElement, isValidElement } from 'react';
 import { Pressable, Text, ActivityIndicator } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from './ThemeProvider';
@@ -30,13 +31,17 @@ export function Button({
   const s = SIZE_STYLES[size];
 
   const VARIANT_STYLES: Record<ButtonVariant, { bg: string; text: string; border: string }> = {
-    primary:   { bg: c.primary, text: '#FFFFFF', border: c.primary },
+    primary:   { bg: c.primary, text: c.text, border: c.primary },
     secondary: { bg: c.surfaceSecondary, text: c.text, border: c.border },
     ghost:     { bg: 'transparent', text: c.text, border: 'transparent' },
     danger:    { bg: c.dangerLight, text: c.danger, border: c.dangerBorder },
   };
 
   const v = VARIANT_STYLES[variant];
+  const iconColor = disabled ? c.textTertiary : v.text;
+  const renderedIcon = isValidElement<{ color?: string }>(icon)
+    ? cloneElement(icon, { color: iconColor })
+    : icon;
 
   return (
     <Pressable
@@ -62,7 +67,7 @@ export function Button({
         <ActivityIndicator size="small" color={v.text} />
       ) : (
         <>
-          {icon}
+          {renderedIcon}
           <Text style={{ fontSize: s.fs, fontWeight: '600', color: disabled ? c.textTertiary : v.text }}>
             {label}
           </Text>

@@ -47,4 +47,26 @@ describe('pantry store', () => {
     expect(store.delete(rice.id)).toBe(true);
     expect(store.list({}).map((item) => item.name)).toEqual(['eggs']);
   });
+
+  it('marks items used up when quantity reaches zero and records usedAt', () => {
+    const store = createPantryStore();
+    const basil = store.add({ name: 'basil', category: 'produce', quantity: 1, unit: 'bunch' });
+
+    const updated = store.update(basil.id, { quantity: 0 });
+
+    expect(updated?.quantity).toBe(0);
+    expect(updated?.status).toBe('used_up');
+    expect(updated?.usedAt).toBeTruthy();
+  });
+
+  it('clears usedAt when restoring a used up item', () => {
+    const store = createPantryStore();
+    const basil = store.add({ name: 'basil', category: 'produce', quantity: 1, unit: 'bunch' });
+
+    store.update(basil.id, { status: 'used_up' });
+    const restored = store.update(basil.id, { status: 'fresh', quantity: 1 });
+
+    expect(restored?.status).toBe('fresh');
+    expect(restored?.usedAt).toBeUndefined();
+  });
 });

@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { z } from 'zod';
+import { AiServiceUnavailableError } from './services/aiErrors';
 import { extractIngredientsFromImage } from './services/ingredientExtraction';
 import { generateRecipes, getRecipeById } from './services/recipeGeneration';
 import { usageEventNames, usageEventStore } from './services/usageEvents';
@@ -74,10 +75,11 @@ const addPantryItemSchema = z.object({
 
 const updatePantryItemSchema = z.object({
   name: z.string().trim().min(1).optional(),
-  quantity: z.number().positive().optional(),
+  quantity: z.number().min(0).optional(),
   unit: z.string().trim().min(1).optional(),
   status: z.enum(['fresh', 'expiring_soon', 'expired', 'used_up']).optional(),
   expiryDate: z.string().trim().min(1).optional(),
+  usedAt: z.string().trim().min(1).optional(),
 });
 
 const pantryListQuerySchema = z.object({
@@ -331,12 +333,25 @@ export async function buildApp() {
       height: input.height ?? 768,
     };
 
-    const result = await extractIngredientsFromImage({
-      image: stripDataUriPrefix(input.image),
-      imageSize,
-      minConfidence: input.confidence ?? 0.45,
-      maxDetections: input.maxDetections ?? 20,
-    });
+    let result: Awaited<ReturnType<typeof extractIngredientsFromImage>>;
+    try {
+      result = await extractIngredientsFromImage({
+        image: stripDataUriPrefix(input.image),
+        imageSize,
+        minConfidence: input.confidence ?? 0.45,
+        maxDetections: input.maxDetections ?? 20,
+      });
+    } catch (error) {
+      if (error instanceof AiServiceUnavailableError) {
+        return reply.status(error.statusCode).send({
+          error: 'Service Unavailable',
+          code: error.code,
+          message: error.message,
+          statusCode: error.statusCode,
+        });
+      }
+      throw error;
+    }
 
     return {
       data: {
@@ -371,15 +386,28 @@ export async function buildApp() {
       });
     }
 
-    const result = await generateRecipes({
-      ingredients,
-      dietary: query.dietary?.split(',').filter(Boolean),
-      maxCookTime: query.maxCookTime,
-      cuisineType: query.cuisineType,
-      difficulty: query.difficulty,
-      limit: query.limit ?? 20,
-      offset: query.offset ?? 0,
-    });
+    let result: Awaited<ReturnType<typeof generateRecipes>>;
+    try {
+      result = await generateRecipes({
+        ingredients,
+        dietary: query.dietary?.split(',').filter(Boolean),
+        maxCookTime: query.maxCookTime,
+        cuisineType: query.cuisineType,
+        difficulty: query.difficulty,
+        limit: query.limit ?? 20,
+        offset: query.offset ?? 0,
+      });
+    } catch (error) {
+      if (error instanceof AiServiceUnavailableError) {
+        return reply.status(error.statusCode).send({
+          error: 'Service Unavailable',
+          code: error.code,
+          message: error.message,
+          statusCode: error.statusCode,
+        });
+      }
+      throw error;
+    }
 
     return {
       data: {

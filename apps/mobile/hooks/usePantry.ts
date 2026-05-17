@@ -202,7 +202,7 @@ export function useUpdatePantryItem() {
     mutationFn: async ({ id, ...updates }: { id: string } & UpdatePantryItemRequest) => {
       // Update locally first
       const items = await localStore.getPantryItems();
-      const updated = items.map((i) => (i.id === id ? { ...i, ...updates } : i));
+      const updated = items.map((i) => (i.id === id ? normalizeLocalPantryUpdate({ ...i, ...updates }) : i));
       await localStore.savePantryItems(updated);
 
       try {
@@ -227,6 +227,24 @@ export function useUpdatePantryItem() {
       qc.invalidateQueries({ queryKey: ['pantry'] });
     },
   });
+}
+
+function normalizeLocalPantryUpdate(item: PantryItem): PantryItem {
+  if (item.status === 'used_up' || item.quantity <= 0) {
+    return {
+      ...item,
+      quantity: Math.max(0, item.quantity),
+      status: 'used_up',
+      usedAt: item.usedAt ?? new Date().toISOString(),
+    };
+  }
+
+  if (item.usedAt) {
+    const { usedAt: _usedAt, ...rest } = item;
+    return rest;
+  }
+
+  return item;
 }
 
 export function useDeletePantryItem() {

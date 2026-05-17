@@ -90,10 +90,10 @@ export function createPantryStore() {
       const existing = items.get(id);
       if (!existing) return undefined;
 
-      const updated = refreshStatus({
+      const updated = refreshStatus(normalizeUsageUpdate({
         ...existing,
         ...updates,
-      });
+      }));
       items.set(id, updated);
       return updated;
     },
@@ -139,6 +139,24 @@ function refreshStatus(item: PantryItem): PantryItem {
   if (item.status === 'used_up') return item;
   const status = statusFromExpiry(item.expiryDate);
   return { ...item, status };
+}
+
+function normalizeUsageUpdate(item: PantryItem): PantryItem {
+  if (item.status === 'used_up' || item.quantity <= 0) {
+    return {
+      ...item,
+      quantity: Math.max(0, item.quantity),
+      status: 'used_up',
+      usedAt: item.usedAt ?? new Date().toISOString(),
+    };
+  }
+
+  if (item.usedAt) {
+    const { usedAt: _usedAt, ...rest } = item;
+    return rest;
+  }
+
+  return item;
 }
 
 function statusFromExpiry(expiryDate?: string): PantryItemStatus {

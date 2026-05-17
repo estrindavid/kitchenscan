@@ -57,6 +57,7 @@ export interface UpdatePantryItemRequest {
   unit?: string;
   status?: PantryItem['status'];
   expiryDate?: string;
+  usedAt?: string;
 }
 
 // ─── Detection ──────────────────────────────────────────

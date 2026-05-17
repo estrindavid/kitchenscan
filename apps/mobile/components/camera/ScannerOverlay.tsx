@@ -14,6 +14,7 @@ interface ScannerOverlayProps {
   onCapture?: () => void;
   photoCount?: number;
   itemCount?: number;
+  errorMessage?: string | null;
 }
 
 const STATUS_CONFIG: Record<
@@ -33,9 +34,11 @@ export function ScannerOverlay({
   onCapture,
   photoCount = 0,
   itemCount = 0,
+  errorMessage,
 }: ScannerOverlayProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const config = STATUS_CONFIG[scanStatus];
+  const message = scanStatus === 'error' && errorMessage ? errorMessage : config.message;
 
   useEffect(() => {
     if (scanStatus !== 'processing') {
@@ -87,10 +90,10 @@ export function ScannerOverlay({
       )}
 
       {/* Message banner */}
-      {!!config.message && (
+      {!!message && (
         <View style={styles.hintContainer} pointerEvents="none">
           <Typography variant="body" color="rgba(255,255,255,0.85)" style={styles.hint}>
-            {config.message}
+            {message}
           </Typography>
         </View>
       )}
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
   },
   hintContainer: {
     position: 'absolute',
-    bottom: 220,
+    bottom: 250,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -197,24 +200,25 @@ const styles = StyleSheet.create({
   },
   captureContainer: {
     position: 'absolute',
-    bottom: 160,
+    bottom: 108,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
   captureBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 4,
-    borderColor: '#fff',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.72)',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   captureInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#fff',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.52)',
   },
 });

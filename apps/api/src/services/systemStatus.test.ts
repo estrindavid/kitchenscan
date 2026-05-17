@@ -46,6 +46,26 @@ describe('system status', () => {
     expect(status.ok).toBe(true);
   });
 
+  it('treats a Vertex project with ADC as enough Google configuration', () => {
+    const status = createSystemStatus({
+      env: {
+        ROCKETRIDE_URI: 'http://localhost:5565',
+        GOOGLE_CLOUD_PROJECT: 'kitchenscan-demo',
+      },
+      pipelines: [
+        { name: 'extract-ingredients.pipe', exists: true },
+        { name: 'generate-recipes.pipe', exists: true },
+      ],
+      apiBaseUrl: 'http://localhost:3001',
+    });
+
+    expect(status.google.configured).toBe(true);
+    expect(status.google.projectConfigured).toBe(true);
+    expect(status.google.vertexAdcConfigured).toBe(true);
+    expect(status.ok).toBe(true);
+  });
+
+
   it('requires a RocketRide API key for non-local RocketRide URIs', () => {
     const status = createSystemStatus({
       env: {
@@ -74,7 +94,7 @@ describe('system status', () => {
     expect(status.ok).toBe(false);
     expect(status.missing).toEqual([
       'ROCKETRIDE_URI',
-      'ROCKETRIDE_GEMINI_API_KEY',
+      'Gemini auth: GOOGLE_CLOUD_PROJECT with ADC or ROCKETRIDE_GEMINI_API_KEY',
       'pipeline:extract-ingredients.pipe',
     ]);
   });
