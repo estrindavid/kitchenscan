@@ -11,6 +11,7 @@ export interface SystemStatus {
     configured: boolean;
     uriConfigured: boolean;
     apiKeyConfigured: boolean;
+    apiKeyRequired: boolean;
   };
   google: {
     configured: boolean;
@@ -31,6 +32,7 @@ const OFFLINE_STATUS: SystemStatus = {
     configured: false,
     uriConfigured: false,
     apiKeyConfigured: false,
+    apiKeyRequired: false,
   },
   google: {
     configured: false,

@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { Detection } from '@kitchenscan/shared';
+import { isLocalRocketRideUri } from './systemStatus';
 
 export interface IngredientCandidate {
   name?: string;
@@ -120,7 +121,7 @@ async function executeRocketRidePipeline(
   filepath: string,
   input: ExtractIngredientsInput,
 ): Promise<IngredientCandidate[]> {
-  if (!process.env.ROCKETRIDE_APIKEY || !process.env.ROCKETRIDE_URI || process.env.NODE_ENV === 'test') {
+  if (!canAttemptRocketRide() || process.env.NODE_ENV === 'test') {
     return [];
   }
 
@@ -151,6 +152,11 @@ async function executeRocketRidePipeline(
       await client.disconnect().catch(() => undefined);
     }
   }
+}
+
+function canAttemptRocketRide() {
+  if (!process.env.ROCKETRIDE_URI) return false;
+  return Boolean(process.env.ROCKETRIDE_APIKEY) || isLocalRocketRideUri(process.env.ROCKETRIDE_URI);
 }
 
 function parseRocketRideCandidates(response: unknown): IngredientCandidate[] {

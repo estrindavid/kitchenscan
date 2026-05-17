@@ -9,9 +9,8 @@ const env = {
 
 const checks = [
   ['ROCKETRIDE_URI', Boolean(env.ROCKETRIDE_URI)],
-  ['ROCKETRIDE_APIKEY', Boolean(env.ROCKETRIDE_APIKEY)],
+  ['ROCKETRIDE_APIKEY or local RocketRide', Boolean(env.ROCKETRIDE_APIKEY) || isLocalRocketRideUri(env.ROCKETRIDE_URI)],
   ['ROCKETRIDE_GEMINI_API_KEY', Boolean(env.ROCKETRIDE_GEMINI_API_KEY)],
-  ['GOOGLE_CLOUD_PROJECT', Boolean(env.GOOGLE_CLOUD_PROJECT)],
   ['extract-ingredients.pipe', fs.existsSync(path.join(root, 'pipelines/extract-ingredients.pipe'))],
   ['generate-recipes.pipe', fs.existsSync(path.join(root, 'pipelines/generate-recipes.pipe'))],
 ];
@@ -53,4 +52,14 @@ function readDotEnv(filePath) {
     out[trimmed.slice(0, index)] = trimmed.slice(index + 1);
   }
   return out;
+}
+
+function isLocalRocketRideUri(uri) {
+  if (!uri) return false;
+  try {
+    const parsed = new URL(uri.includes('://') ? uri : `http://${uri}`);
+    return ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+  } catch {
+    return uri.includes('localhost') || uri.includes('127.0.0.1');
+  }
 }

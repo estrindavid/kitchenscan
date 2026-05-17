@@ -1,8 +1,13 @@
 import './loadEnv';
 import fs from 'node:fs';
 import path from 'node:path';
+import { isLocalRocketRideUri } from './services/systemStatus';
 
-const requiredEnv = ['ROCKETRIDE_URI', 'ROCKETRIDE_APIKEY', 'ROCKETRIDE_GEMINI_API_KEY'];
+const requiredEnv = [
+  'ROCKETRIDE_URI',
+  ...(!isLocalRocketRideUri(process.env.ROCKETRIDE_URI) ? ['ROCKETRIDE_APIKEY'] : []),
+  'ROCKETRIDE_GEMINI_API_KEY',
+];
 const pipelinePaths = [
   process.env.KITCHENSCAN_EXTRACT_PIPELINE
     ?? path.resolve(process.cwd(), '../../pipelines/extract-ingredients.pipe'),

@@ -10,12 +10,16 @@ Required:
 
 ```bash
 ROCKETRIDE_URI=http://localhost:5565
-ROCKETRIDE_APIKEY=your_rocketride_key
+ROCKETRIDE_APIKEY=
 ROCKETRIDE_GEMINI_API_KEY=your_gemini_key
 GOOGLE_CLOUD_PROJECT=your_google_cloud_project_id
 PORT=3001
 HOST=0.0.0.0
 ```
+
+`ROCKETRIDE_APIKEY` is optional for a local RocketRide engine at `localhost:5565`. Fill it only if you are connecting to RocketRide Cloud or an authenticated remote engine.
+
+`GOOGLE_CLOUD_PROJECT` is optional if you are using a Gemini API key from Google AI Studio directly. Keep it if you are also showing a Google Cloud / Vertex project.
 
 Do not commit real keys.
 

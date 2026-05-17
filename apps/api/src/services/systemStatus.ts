@@ -19,10 +19,12 @@ export interface SystemStatus {
     configured: boolean;
     uriConfigured: boolean;
     apiKeyConfigured: boolean;
+    apiKeyRequired: boolean;
   };
   google: {
     configured: boolean;
     geminiKeyConfigured: boolean;
+    /** Optional when using Gemini API keys directly; useful if demoing Vertex/Google Cloud. */
     projectConfigured: boolean;
   };
   pipelineFilesReady: boolean;
@@ -35,6 +37,7 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
     uriConfigured: Boolean(input.env.ROCKETRIDE_URI),
     apiKeyConfigured: Boolean(input.env.ROCKETRIDE_APIKEY),
   };
+  const apiKeyRequired = rocketride.uriConfigured && !isLocalRocketRideUri(input.env.ROCKETRIDE_URI);
   const google = {
     geminiKeyConfigured: Boolean(input.env.ROCKETRIDE_GEMINI_API_KEY),
     projectConfigured: Boolean(input.env.GOOGLE_CLOUD_PROJECT),
@@ -42,9 +45,8 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
   const pipelineFilesReady = input.pipelines.every((pipeline) => pipeline.exists);
   const missing = [
     ...missingEnv('ROCKETRIDE_URI', rocketride.uriConfigured),
-    ...missingEnv('ROCKETRIDE_APIKEY', rocketride.apiKeyConfigured),
+    ...missingEnv('ROCKETRIDE_APIKEY', !apiKeyRequired || rocketride.apiKeyConfigured),
     ...missingEnv('ROCKETRIDE_GEMINI_API_KEY', google.geminiKeyConfigured),
-    ...missingEnv('GOOGLE_CLOUD_PROJECT', google.projectConfigured),
     ...input.pipelines
       .filter((pipeline) => !pipeline.exists)
       .map((pipeline) => `pipeline:${pipeline.name}`),
@@ -58,11 +60,12 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
     },
     rocketride: {
       ...rocketride,
-      configured: rocketride.uriConfigured && rocketride.apiKeyConfigured,
+      apiKeyRequired,
+      configured: rocketride.uriConfigured && (!apiKeyRequired || rocketride.apiKeyConfigured),
     },
     google: {
       ...google,
-      configured: google.geminiKeyConfigured && google.projectConfigured,
+      configured: google.geminiKeyConfigured,
     },
     pipelineFilesReady,
     pipelines: input.pipelines,
@@ -72,4 +75,14 @@ export function createSystemStatus(input: SystemStatusInput): SystemStatus {
 
 function missingEnv(name: string, configured: boolean) {
   return configured ? [] : [name];
+}
+
+export function isLocalRocketRideUri(uri?: string) {
+  if (!uri) return false;
+  try {
+    const parsed = new URL(uri.includes('://') ? uri : `http://${uri}`);
+    return ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+  } catch {
+    return uri.includes('localhost') || uri.includes('127.0.0.1');
+  }
 }
