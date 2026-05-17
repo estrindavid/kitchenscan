@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../components/ui/theme';
+import { brandColors, colors } from '../../components/ui/theme';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -48,11 +48,23 @@ function AnimatedTabIcon({
   const icons = TAB_ICONS[tab] ?? { focused: 'ellipse', unfocused: 'ellipse-outline' };
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View
+      style={{
+        width: 38,
+        height: 30,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: focused ? brandColors.lemon : 'transparent',
+        borderWidth: focused ? 2 : 0,
+        borderColor: brandColors.ink,
+        transform: [{ scale }],
+      }}
+    >
       <Ionicons
         name={focused ? icons.focused : icons.unfocused}
         size={size}
-        color={color}
+        color={focused ? brandColors.ink : color}
       />
     </Animated.View>
   );
@@ -62,12 +74,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: brandColors.ink,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.borderLight,
+          backgroundColor: brandColors.white,
+          borderTopColor: brandColors.ink,
+          borderTopWidth: 3,
+          minHeight: 82,
+          paddingTop: 8,
         },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
         headerShadowVisible: false,

@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { View, SectionList, StyleSheet, RefreshControl, TextInput, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
 import { Button, Typography, Badge } from '../../components/ui';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { PantryItemRow } from '../../components/pantry/PantryItem';
 import { EmptyPantry } from '../../components/pantry/EmptyPantry';
 import { ExpiryBanner } from '../../components/pantry/ExpiryBanner';
@@ -112,27 +114,36 @@ export default function PantryScreen() {
 
   return (
     <View style={styles.container}>
+      <MemphisBackground variant="cream" density="low" animated={false} />
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Typography variant="h2">My Pantry</Typography>
-            <Typography variant="caption" color={colors.textSecondary}>
-              {items.length} item{items.length !== 1 ? 's' : ''}
-            </Typography>
-          </View>
-          <Button label="+ Add" size="sm" onPress={() => setShowAddSheet(true)} />
-        </View>
+        <BrandHeader
+          eyebrow="Living pantry"
+          title="My Pantry"
+          subtitle={`${items.length} item${items.length !== 1 ? 's' : ''} ready for recipe matching`}
+          accent="mint"
+          accessory={<FoodIcon type="can" size={58} />}
+        />
+
+        <Button
+          label="Add"
+          size="sm"
+          onPress={() => setShowAddSheet(true)}
+          icon={<Ionicons name="add" size={16} color="#FFFFFF" />}
+        />
 
         {/* Search */}
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search items..."
-          placeholderTextColor={colors.textTertiary}
-          value={search}
-          onChangeText={setSearch}
-          clearButtonMode="while-editing"
-        />
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={17} color={colors.textTertiary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search items..."
+            placeholderTextColor={colors.textTertiary}
+            value={search}
+            onChangeText={setSearch}
+            clearButtonMode="while-editing"
+          />
+        </View>
 
         {/* Category filter chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll} contentContainerStyle={styles.chipRow}>
@@ -146,7 +157,7 @@ export default function PantryScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? '#fff' : colors.textSecondary}
+                  color={selected ? brandColors.ink : colors.textSecondary}
                 >
                   {label}
                 </Typography>
@@ -167,7 +178,7 @@ export default function PantryScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? colors.primary : colors.textTertiary}
+                  color={selected ? brandColors.ink : colors.textTertiary}
                 >
                   {label}
                 </Typography>
@@ -190,7 +201,7 @@ export default function PantryScreen() {
         }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
-            <Typography variant="captionMedium" color={colors.textSecondary}>{section.title}</Typography>
+            <Typography variant="captionMedium" color={brandColors.ink}>{section.title}</Typography>
             <Badge label={`${section.count}`} />
           </View>
         )}
@@ -214,55 +225,55 @@ export default function PantryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: brandColors.cream },
   header: {
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingBottom: spacing.sm,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: 'rgba(255,247,232,0.96)',
+    borderBottomWidth: 3,
+    borderBottomColor: brandColors.ink,
+    paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.md,
+    gap: spacing.md,
   },
-  searchInput: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    height: 36,
-    borderWidth: 1,
-    borderColor: colors.border,
+  searchWrap: {
+    minHeight: 42,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: brandColors.white,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 38,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.surfaceSecondary,
   },
   chipScroll: { marginBottom: spacing.xs },
-  chipRow: { paddingHorizontal: spacing.lg, gap: spacing.xs },
+  chipRow: { gap: spacing.xs },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSecondary,
+    paddingVertical: 6,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipSelected: { backgroundColor: brandColors.lemon, borderColor: brandColors.ink },
   sortPill: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    backgroundColor: 'transparent',
+    paddingVertical: 6,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
   sortPillSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.mint,
   },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   sectionHeader: {
@@ -270,6 +281,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(255,255,255,0.72)',
   },
   separator: { height: spacing.xs },
   sectionSeparator: { height: spacing.lg },

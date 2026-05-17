@@ -6,11 +6,13 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
 import { Typography } from '../../components/ui';
 import { RecipeCard } from '../../components/recipes/RecipeCard';
 import { RecipeCardSkeleton } from '../../components/recipes/RecipeCardSkeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { usePantryItems } from '../../hooks/usePantry';
 import { useRecipeSearch } from '../../hooks/useRecipes';
 
@@ -41,26 +43,35 @@ export default function RecipesScreen() {
 
   return (
     <View style={styles.container}>
+      <MemphisBackground variant="sky" density="low" animated={false} />
       {/* Header */}
       <View style={styles.header}>
-        <Typography variant="h2">Recipes</Typography>
-        <Typography variant="body" color={colors.textSecondary}>
-          {pantryItems.length > 0
-            ? `Matched to ${pantryItems.length} pantry items`
-            : 'Add items to your pantry to get matches'}
-        </Typography>
+        <BrandHeader
+          eyebrow="Cook what you own"
+          title="Recipes"
+          subtitle={
+            pantryItems.length > 0
+              ? `Matched to ${pantryItems.length} pantry item${pantryItems.length === 1 ? '' : 's'}`
+              : 'Add items to your pantry to get matches'
+          }
+          accent="lemon"
+          accessory={<FoodIcon type="pasta" size={62} />}
+        />
       </View>
 
       {/* Filters */}
       <View style={styles.filters}>
         {/* Cuisine text filter */}
-        <TextInput
-          style={styles.cuisineInput}
-          placeholder="Cuisine (e.g. Italian)"
-          placeholderTextColor={colors.textTertiary}
-          value={cuisineFilter}
-          onChangeText={setCuisineFilter}
-        />
+        <View style={styles.inputWrap}>
+          <Ionicons name="search" size={17} color={colors.textTertiary} />
+          <TextInput
+            style={styles.cuisineInput}
+            placeholder="Cuisine (e.g. Italian)"
+            placeholderTextColor={colors.textTertiary}
+            value={cuisineFilter}
+            onChangeText={setCuisineFilter}
+          />
+        </View>
 
         {/* Difficulty pills */}
         <View style={styles.pillRow}>
@@ -74,7 +85,7 @@ export default function RecipesScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? '#fff' : colors.textSecondary}
+                  color={selected ? brandColors.ink : colors.textSecondary}
                 >
                   {d.charAt(0).toUpperCase() + d.slice(1)}
                 </Typography>
@@ -95,7 +106,7 @@ export default function RecipesScreen() {
               >
                 <Typography
                   variant="captionMedium"
-                  color={selected ? '#fff' : colors.textSecondary}
+                  color={selected ? brandColors.ink : colors.textSecondary}
                 >
                   {label}
                 </Typography>
@@ -149,34 +160,38 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: brandColors.skyLight,
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: 2,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: 'rgba(191,234,255,0.95)',
   },
   filters: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingBottom: spacing.md,
+    backgroundColor: 'rgba(191,234,255,0.95)',
+    borderBottomWidth: 3,
+    borderBottomColor: brandColors.ink,
     gap: spacing.sm,
   },
-  cuisineInput: {
-    height: 36,
-    borderWidth: 1,
-    borderColor: colors.border,
+  inputWrap: {
+    minHeight: 42,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: brandColors.white,
+  },
+  cuisineInput: {
+    flex: 1,
+    minHeight: 38,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.surfaceSecondary,
   },
   pillRow: {
     flexDirection: 'row',
@@ -185,15 +200,15 @@ const styles = StyleSheet.create({
   },
   pill: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSecondary,
+    paddingVertical: 6,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
   pillSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: brandColors.peach,
+    borderColor: brandColors.ink,
   },
   list: {
     padding: spacing.lg,

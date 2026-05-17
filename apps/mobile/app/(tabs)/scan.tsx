@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { Scanner } from '../../components/camera/Scanner';
+import { FoodIcon, MemphisBackground } from '../../components/brand';
 import { useScanStore } from '../../stores/scanStore';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { trackEvent } from '../../services/analytics';
 
 const IS_WEB = Platform.OS === 'web';
@@ -63,12 +65,19 @@ export default function ScanScreen() {
   if (IS_WEB) {
     return (
       <View style={styles.demoContainer}>
+        <MemphisBackground variant="cream" density="medium" />
         <StatusBar barStyle="dark-content" />
         <View style={styles.demoBanner}>
-          <Text style={styles.demoBannerText}>📷 Demo Mode</Text>
-          <Text style={styles.demoBannerSubtext}>
-            Camera is not available in web mode. Use the simulator below to demo the scan flow.
-          </Text>
+          <View style={styles.demoBannerIcon}>
+            <Ionicons name="scan" size={22} color={brandColors.ink} />
+          </View>
+          <View style={styles.demoBannerCopy}>
+            <Text style={styles.demoBannerText}>Demo scanner</Text>
+            <Text style={styles.demoBannerSubtext}>
+              Camera is not available in web mode. Use the simulator below to demo the scan flow.
+            </Text>
+          </View>
+          <FoodIcon type="tomato" size={48} />
         </View>
         <ScrollView contentContainerStyle={styles.demoBody}>
           <Text style={styles.demoSectionLabel}>SIMULATED DETECTIONS</Text>
@@ -82,12 +91,16 @@ export default function ScanScreen() {
           </View>
           {DEMO_ITEMS.map((item) => (
             <View key={item.label} style={styles.demoItemRow}>
-              <Text style={styles.demoItemName}>{item.label}</Text>
+              <View style={styles.demoItemNameWrap}>
+                <View style={styles.demoItemDot} />
+                <Text style={styles.demoItemName}>{item.label}</Text>
+              </View>
               <Text style={styles.demoItemConfidence}>100% confidence</Text>
             </View>
           ))}
           <Pressable style={styles.simulateBtn} onPress={handleSimulateScan}>
             <Text style={styles.simulateBtnText}>Simulate Scan</Text>
+            <Ionicons name="sparkles" size={17} color={brandColors.white} />
           </Pressable>
           <Text style={styles.demoHint}>
             Or type a food name below to add it manually:
@@ -139,19 +152,36 @@ const styles = StyleSheet.create({
   // ── Demo Mode ─────────────────────────────────────────────
   demoContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: brandColors.cream,
   },
   demoBanner: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: brandColors.skyLight,
     padding: spacing.lg,
+    gap: spacing.md,
+    borderBottomWidth: 3,
+    borderBottomColor: brandColors.ink,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  demoBannerIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  demoBannerCopy: {
+    flex: 1,
     gap: spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   demoBannerText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '800',
+    color: brandColors.ink,
   },
   demoBannerSubtext: {
     fontSize: 13,
@@ -164,20 +194,32 @@ const styles = StyleSheet.create({
   },
   demoSectionLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: brandColors.ink,
     marginBottom: spacing.xs,
   },
   demoItemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: brandColors.white,
     padding: spacing.md,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
+  },
+  demoItemNameWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  demoItemDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: brandColors.green,
+    borderWidth: 2,
+    borderColor: brandColors.ink,
   },
   demoItemName: {
     fontSize: 15,
@@ -187,13 +229,14 @@ const styles = StyleSheet.create({
   },
   demoItemConfidence: {
     fontSize: 13,
-    color: colors.success,
+    fontWeight: '700',
+    color: brandColors.green,
   },
   sessionSummary: {
-    backgroundColor: colors.surface,
+    backgroundColor: brandColors.white,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
     padding: spacing.md,
     gap: 4,
   },
@@ -208,10 +251,15 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   simulateBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: brandColors.ink,
     paddingVertical: spacing.md,
-    borderRadius: radii.full,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
     marginTop: spacing.sm,
   },
   simulateBtnText: {
@@ -233,7 +281,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: brandColors.ink,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     fontSize: 15,
@@ -241,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   manualAddBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: brandColors.ink,
     height: 44,
     paddingHorizontal: spacing.lg,
     borderRadius: radii.md,
@@ -256,9 +304,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   goToConfirmBtn: {
-    backgroundColor: colors.success,
+    backgroundColor: brandColors.green,
     paddingVertical: spacing.md,
-    borderRadius: radii.full,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
     alignItems: 'center',
     marginTop: spacing.sm,
   },

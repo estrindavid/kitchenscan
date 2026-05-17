@@ -1,3 +1,4 @@
+export { BrandHeader } from './BrandHeader';
 export { BrandPanel } from './BrandPanel';
 export { FoodIcon, type FoodIconType } from './FoodIcon';
 export { MemphisBackground } from './MemphisBackground';
