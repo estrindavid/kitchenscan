@@ -19,6 +19,21 @@ export const colors = {
   successLight: '#E8F5F0',
 } as const;
 
+export const brandColors = {
+  sky: '#16A4E8',
+  skyLight: '#BFEAFF',
+  peach: '#FFC1A6',
+  peachLight: '#FFE4D6',
+  cream: '#FFF7E8',
+  ink: '#10162F',
+  green: '#22A06B',
+  mint: '#BCEFD7',
+  coral: '#FF7F66',
+  lemon: '#FFE36E',
+  lilac: '#B9B6FF',
+  white: '#FFFFFF',
+} as const;
+
 export const darkColors = {
   primary: '#0F6E56',
   primaryLight: '#1A3D34',
@@ -40,7 +55,23 @@ export const darkColors = {
   successLight: '#1A3D34',
 } as const;
 
+export const darkBrandColors = {
+  sky: '#3DB8F2',
+  skyLight: '#15384A',
+  peach: '#FFB092',
+  peachLight: '#452C25',
+  cream: '#27231C',
+  ink: '#F8FAFF',
+  green: '#35C789',
+  mint: '#174431',
+  coral: '#FF927C',
+  lemon: '#FFE36E',
+  lilac: '#C8C5FF',
+  white: '#FFFFFF',
+} as const;
+
 export type ColorPalette = { readonly [K in keyof typeof colors]: string };
+export type BrandPalette = typeof brandColors;
 
 export const spacing = {
   xs: 4,
@@ -70,4 +101,13 @@ export const typography = {
   caption: { fontSize: 13, fontWeight: '400' as const, lineHeight: 18 },
   captionMedium: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
   label: { fontSize: 11, fontWeight: '600' as const, lineHeight: 14, letterSpacing: 0.5 },
+} as const;
+
+export const motion = {
+  fast: 160,
+  medium: 260,
+  slow: 420,
+  float: 2600,
+  stagger: 70,
+  pressScale: 0.96,
 } as const;
