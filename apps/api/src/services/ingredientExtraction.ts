@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { Detection } from '@kitchenscan/shared';
+import { AiServiceUnavailableError, shouldUseDemoAiFallback } from './aiErrors';
 import { isLocalRocketRideUri } from './systemStatus';
 
 export interface IngredientCandidate {
@@ -48,6 +49,7 @@ interface RocketRideClientLike {
 
 const PIPELINE_NAME = 'extract-ingredients.pipe';
 const DEFAULT_MODEL_VERSION = 'gemini-2.5-flash-via-rocketride';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const fallbackCandidates: IngredientCandidate[] = [
   { name: 'Tomatoes', category: 'produce', confidence: 0.87, boundingBox: { x: 0.1, y: 0.2, width: 0.28, height: 0.24 } },
@@ -99,17 +101,105 @@ export async function extractIngredientsFromImage(
     };
   }
 
-  return {
-    detections: normalizeIngredientCandidates(fallbackCandidates, input.imageSize)
-      .filter((detection) => detection.confidence >= input.minConfidence)
-      .slice(0, input.maxDetections),
-    modelVersion: `${DEFAULT_MODEL_VERSION}:demo-fallback`,
-    pipeline: {
-      provider: 'RocketRide + Gemini',
-      name: PIPELINE_NAME,
-      usedFallback: true,
-    },
-  };
+  const geminiResult = await executeGeminiVision(input);
+  if (geminiResult.length > 0) {
+    return {
+      detections: normalizeIngredientCandidates(geminiResult, input.imageSize)
+        .filter((detection) => detection.confidence >= input.minConfidence)
+        .slice(0, input.maxDetections),
+      modelVersion: `${GEMINI_MODEL}:direct`,
+      pipeline: {
+        provider: 'Gemini direct fallback',
+        name: PIPELINE_NAME,
+        usedFallback: true,
+      },
+    };
+  }
+
+  if (shouldUseDemoAiFallback()) {
+    return {
+      detections: normalizeIngredientCandidates(fallbackCandidates, input.imageSize)
+        .filter((detection) => detection.confidence >= input.minConfidence)
+        .slice(0, input.maxDetections),
+      modelVersion: `${DEFAULT_MODEL_VERSION}:demo-fallback`,
+      pipeline: {
+        provider: 'RocketRide + Gemini',
+        name: PIPELINE_NAME,
+        usedFallback: true,
+      },
+    };
+  }
+
+  throw new AiServiceUnavailableError(
+    'Ingredient detection could not reach RocketRide/Gemini. Check the Gemini key, billing credits, and RocketRide connection.',
+  );
+}
+
+async function executeGeminiVision(input: ExtractIngredientsInput): Promise<IngredientCandidate[]> {
+  const apiKey = process.env.ROCKETRIDE_GEMINI_API_KEY;
+  if (!apiKey || process.env.NODE_ENV === 'test') return [];
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: [
+                    'Identify visible grocery or pantry ingredients in this image.',
+                    'Return only JSON with this exact shape:',
+                    '{"ingredients":[{"name":"tomato","category":"produce","confidence":0.86,"boundingBox":{"x":0.1,"y":0.2,"width":0.25,"height":0.2}}]}',
+                    'Use relative bounding boxes from 0 to 1 when possible.',
+                    'Only include visible food, ingredients, packaged food, or pantry items.',
+                  ].join('\n'),
+                },
+                {
+                  inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: input.image,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new AiServiceUnavailableError(await readGeminiError(response, 'Ingredient detection'));
+    }
+    const body = await response.json() as unknown;
+    return parseGeminiCandidates(body);
+  } catch (error) {
+    if (error instanceof AiServiceUnavailableError) throw error;
+    throw new AiServiceUnavailableError('Ingredient detection could not reach Gemini. Check network and API configuration.');
+  }
+}
+
+async function readGeminiError(response: Response, prefix: string) {
+  try {
+    const body = await response.json() as { error?: { status?: string; message?: string } };
+    const status = body.error?.status;
+    const message = body.error?.message;
+    if (status === 'RESOURCE_EXHAUSTED') {
+      return `${prefix} is blocked because Gemini credits are depleted. Add credits or use a different valid Gemini key.`;
+    }
+    if (message) return `${prefix} failed: ${message}`;
+  } catch {
+    // Fall through to a generic sanitized message.
+  }
+  return `${prefix} failed with Gemini status ${response.status}.`;
 }
 
 function getPipelinePath() {
@@ -173,6 +263,22 @@ function parseRocketRideCandidates(response: unknown): IngredientCandidate[] {
   }
 
   return [];
+}
+
+function parseGeminiCandidates(response: unknown): IngredientCandidate[] {
+  if (!isRecord(response)) return [];
+  const candidates = response.candidates;
+  if (!Array.isArray(candidates)) return [];
+  const text = candidates
+    .flatMap((candidate) => {
+      if (!isRecord(candidate.content)) return [];
+      const parts = candidate.content.parts;
+      if (!Array.isArray(parts)) return [];
+      return parts.flatMap((part) => isRecord(part) && typeof part.text === 'string' ? [part.text] : []);
+    })
+    .join('\n');
+
+  return parseRocketRideCandidates(text);
 }
 
 function parseJsonLike(value: unknown): unknown {

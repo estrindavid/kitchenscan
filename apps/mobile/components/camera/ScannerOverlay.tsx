@@ -14,6 +14,7 @@ interface ScannerOverlayProps {
   onCapture?: () => void;
   photoCount?: number;
   itemCount?: number;
+  errorMessage?: string | null;
 }
 
 const STATUS_CONFIG: Record<
@@ -33,9 +34,11 @@ export function ScannerOverlay({
   onCapture,
   photoCount = 0,
   itemCount = 0,
+  errorMessage,
 }: ScannerOverlayProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const config = STATUS_CONFIG[scanStatus];
+  const message = scanStatus === 'error' && errorMessage ? errorMessage : config.message;
 
   useEffect(() => {
     if (scanStatus !== 'processing') {
@@ -87,10 +90,10 @@ export function ScannerOverlay({
       )}
 
       {/* Message banner */}
-      {!!config.message && (
+      {!!message && (
         <View style={styles.hintContainer} pointerEvents="none">
           <Typography variant="body" color="rgba(255,255,255,0.85)" style={styles.hint}>
-            {config.message}
+            {message}
           </Typography>
         </View>
       )}

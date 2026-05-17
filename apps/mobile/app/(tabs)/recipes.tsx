@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BrandHeader, FoodIcon, MemphisBackground } from '../../components/brand';
-import { Typography } from '../../components/ui';
+import { Button, Typography } from '../../components/ui';
 import { RecipeCard } from '../../components/recipes/RecipeCard';
 import { RecipeCardSkeleton } from '../../components/recipes/RecipeCardSkeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -28,18 +28,36 @@ export default function RecipesScreen() {
   const [difficulty, setDifficulty] = useState<string | undefined>();
   const [maxCookTime, setMaxCookTime] = useState<number | undefined>();
   const [cuisineFilter, setCuisineFilter] = useState('');
+  const [hasRequestedRecipes, setHasRequestedRecipes] = useState(false);
 
   const { data: pantryItems = [], isLoading: isPantryLoading } = usePantryItems();
   const ingredientNames = pantryItems.map((item) => item.name);
 
-  const { data, isLoading: isRecipesLoading, isError } = useRecipeSearch(ingredientNames, {
-    difficulty: difficulty || undefined,
-    maxCookTime,
-    cuisineType: cuisineFilter.trim() || undefined,
-  });
+  const {
+    data,
+    isFetching: isRecipesLoading,
+    isError,
+    error,
+    refetch,
+  } = useRecipeSearch(
+    ingredientNames,
+    {
+      difficulty: difficulty || undefined,
+      maxCookTime,
+      cuisineType: cuisineFilter.trim() || undefined,
+    },
+    { enabled: hasRequestedRecipes },
+  );
 
   const recipes = data?.recipes ?? [];
   const isLoading = isPantryLoading || isRecipesLoading;
+  const errorMessage = getRecipeErrorMessage(error);
+
+  const handleFindRecipes = () => {
+    if (ingredientNames.length === 0) return;
+    setHasRequestedRecipes(true);
+    void refetch();
+  };
 
   return (
     <View style={styles.container}>
@@ -114,17 +132,27 @@ export default function RecipesScreen() {
             );
           })}
         </View>
+
+        <Button
+          label={isRecipesLoading ? 'Finding recipes...' : 'Find me recipes'}
+          onPress={handleFindRecipes}
+          fullWidth
+          size="lg"
+          loading={isRecipesLoading}
+          disabled={isPantryLoading || ingredientNames.length === 0 || isRecipesLoading}
+          icon={<Ionicons name="sparkles" size={18} color="#FFFFFF" />}
+        />
       </View>
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading && (hasRequestedRecipes || isPantryLoading) ? (
         <View style={styles.list}>
           {Array.from({ length: 3 }).map((_, i) => <RecipeCardSkeleton key={i} />)}
         </View>
       ) : isError ? (
         <View style={styles.centered}>
           <Typography variant="body" color={colors.danger}>
-            Failed to load recipes. Check your connection.
+            {errorMessage}
           </Typography>
         </View>
       ) : pantryItems.length === 0 ? (
@@ -132,6 +160,12 @@ export default function RecipesScreen() {
           icon="🍽️"
           title="Your pantry is empty"
           subtitle="Scan food items or add them manually to see matching recipes."
+        />
+      ) : !hasRequestedRecipes ? (
+        <EmptyState
+          icon="✨"
+          title="Ready when you are"
+          subtitle="Tap Find me recipes to ask RocketRide and Gemini for meals using your pantry."
         />
       ) : recipes.length === 0 ? (
         <EmptyState
@@ -155,6 +189,13 @@ export default function RecipesScreen() {
       )}
     </View>
   );
+}
+
+function getRecipeErrorMessage(error: unknown) {
+  const fallback = 'Could not generate recipes. Check RocketRide/Gemini setup, then try again.';
+  if (!error || typeof error !== 'object') return fallback;
+  const maybeAxios = error as { response?: { data?: { message?: string } }; message?: string };
+  return maybeAxios.response?.data?.message ?? maybeAxios.message ?? fallback;
 }
 
 const styles = StyleSheet.create({

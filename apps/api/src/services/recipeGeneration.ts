@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 import type { Ingredient, Recipe, RecipeStep, SkillLevel } from '@kitchenscan/shared';
+import { AiServiceUnavailableError, shouldUseDemoAiFallback } from './aiErrors';
 import { isLocalRocketRideUri } from './systemStatus';
 
 export interface GeneratedIngredient {
@@ -89,6 +90,7 @@ interface RocketRideClientLike {
 }
 
 const PIPELINE_NAME = 'generate-recipes.pipe';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const DEFAULT_PIPELINE: RecipePipelineMetadata = {
   provider: 'RocketRide + Gemini',
   name: PIPELINE_NAME,
@@ -226,9 +228,22 @@ export async function generateRecipes(input: GenerateRecipesInput): Promise<Gene
   const pantry = cleanIngredients(input.ingredients);
   const pipelinePath = getPipelinePath();
   const rocketRideRecipes = await executeRocketRidePipeline(pipelinePath, input);
-  const pipeline = rocketRideRecipes.length > 0 ? DEFAULT_PIPELINE : { ...DEFAULT_PIPELINE, usedFallback: true };
-  const recipes = rocketRideRecipes.length > 0
-    ? normalizeGeneratedRecipes(rocketRideRecipes, pantry, pipeline)
+  const geminiRecipes = rocketRideRecipes.length > 0 ? [] : await executeGeminiRecipeGeneration(input);
+  const generatedRecipes = rocketRideRecipes.length > 0 ? rocketRideRecipes : geminiRecipes;
+  const pipeline =
+    rocketRideRecipes.length > 0
+      ? DEFAULT_PIPELINE
+      : geminiRecipes.length > 0
+        ? { provider: 'Gemini direct fallback', name: PIPELINE_NAME, usedFallback: true }
+        : { ...DEFAULT_PIPELINE, usedFallback: true };
+  if (generatedRecipes.length === 0 && !shouldUseDemoAiFallback()) {
+    throw new AiServiceUnavailableError(
+      'Recipe generation could not reach RocketRide/Gemini. Check the Gemini key, billing credits, and RocketRide connection.',
+    );
+  }
+
+  const recipes = generatedRecipes.length > 0
+    ? normalizeGeneratedRecipes(generatedRecipes, pantry, pipeline)
     : buildFallbackRecipes(pantry);
   const filtered = applyFilters(recipes, input);
   const paginated = filtered.slice(input.offset, input.offset + input.limit);
@@ -244,6 +259,57 @@ export async function generateRecipes(input: GenerateRecipesInput): Promise<Gene
     limit: input.limit,
     pipeline,
   };
+}
+
+async function executeGeminiRecipeGeneration(input: GenerateRecipesInput): Promise<GeneratedRecipe[]> {
+  const apiKey = process.env.ROCKETRIDE_GEMINI_API_KEY;
+  if (!apiKey || process.env.NODE_ENV === 'test') return [];
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: buildRecipePrompt(input) }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.45,
+          },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new AiServiceUnavailableError(await readGeminiError(response, 'Recipe generation'));
+    }
+    const body = await response.json() as unknown;
+    return parseGeminiRecipes(body);
+  } catch (error) {
+    if (error instanceof AiServiceUnavailableError) throw error;
+    throw new AiServiceUnavailableError('Recipe generation could not reach Gemini. Check network and API configuration.');
+  }
+}
+
+async function readGeminiError(response: Response, prefix: string) {
+  try {
+    const body = await response.json() as { error?: { status?: string; message?: string } };
+    const status = body.error?.status;
+    const message = body.error?.message;
+    if (status === 'RESOURCE_EXHAUSTED') {
+      return `${prefix} is blocked because Gemini credits are depleted. Add credits or use a different valid Gemini key.`;
+    }
+    if (message) return `${prefix} failed: ${message}`;
+  } catch {
+    // Fall through to a generic sanitized message.
+  }
+  return `${prefix} failed with Gemini status ${response.status}.`;
 }
 
 export function getRecipeById(id: string): RecipeDetail | undefined {
@@ -371,6 +437,22 @@ function parseRocketRideRecipes(response: unknown): GeneratedRecipe[] {
   }
 
   return [];
+}
+
+function parseGeminiRecipes(response: unknown): GeneratedRecipe[] {
+  if (!isRecord(response)) return [];
+  const candidates = response.candidates;
+  if (!Array.isArray(candidates)) return [];
+  const text = candidates
+    .flatMap((candidate) => {
+      if (!isRecord(candidate.content)) return [];
+      const parts = candidate.content.parts;
+      if (!Array.isArray(parts)) return [];
+      return parts.flatMap((part) => isRecord(part) && typeof part.text === 'string' ? [part.text] : []);
+    })
+    .join('\n');
+
+  return parseRocketRideRecipes(text);
 }
 
 function parseJsonLike(value: unknown): unknown {

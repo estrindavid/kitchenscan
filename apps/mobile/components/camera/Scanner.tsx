@@ -39,7 +39,7 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
 
   const {
     items, isScanning, addDetections, removeItem, updateItem, confirmAll,
-    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts,
+    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts, lastError,
   } = useScanStore();
   const addItem = useAddPantryItem();
 
@@ -177,8 +177,12 @@ function NativeScanner({ onAddToPantry }: ScannerProps) {
         scanStatus={scanStatus}
         photoCount={scanAttempts}
         itemCount={items.length}
+        errorMessage={lastError}
         onCapture={handleCapture}
-        onRetry={() => setScanStatus('idle')}
+        onRetry={() => {
+          setLastError(null);
+          setScanStatus('idle');
+        }}
       />
       <BoundingBoxRenderer
         items={items}
@@ -219,7 +223,7 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
 
   const {
     items, addDetections, removeItem, updateItem, confirmAll,
-    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts,
+    setScanning, scanStatus, setScanStatus, setLastError, scanAttempts, lastError,
   } = useScanStore();
   const addItem = useAddPantryItem();
 
@@ -318,8 +322,12 @@ function WebScanner({ onAddToPantry }: ScannerProps) {
         scanStatus={scanStatus}
         photoCount={scanAttempts}
         itemCount={items.length}
+        errorMessage={lastError}
         onCapture={handleCapture}
-        onRetry={() => setScanStatus('idle')}
+        onRetry={() => {
+          setLastError(null);
+          setScanStatus('idle');
+        }}
       />
       <BoundingBoxRenderer
         items={items}

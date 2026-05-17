@@ -2,6 +2,8 @@ import { api } from './api';
 import { trackEvent } from './analytics';
 import type { Detection } from '@kitchenscan/shared';
 
+declare const process: { env?: Record<string, string | undefined> };
+
 // ─── Response type from /detect ──────────────────────────
 
 interface DetectApiResponse {
@@ -50,6 +52,9 @@ export class CloudDetectionProvider implements DetectionProvider {
       });
       return data.data.detections;
     } catch (error) {
+      if (process.env?.EXPO_PUBLIC_DEMO_SCAN_FALLBACK !== 'true') {
+        throw new Error(getDetectionErrorMessage(error));
+      }
       const fallback = createDemoDetections(width, height);
       void trackEvent('scan_completed', {
         source: 'camera',
@@ -60,6 +65,13 @@ export class CloudDetectionProvider implements DetectionProvider {
       return fallback;
     }
   }
+}
+
+function getDetectionErrorMessage(error: unknown) {
+  const fallback = 'Could not reach detection service. Check RocketRide/Gemini setup, then try again.';
+  if (!error || typeof error !== 'object') return fallback;
+  const maybeAxios = error as { response?: { data?: { message?: string } }; message?: string };
+  return maybeAxios.response?.data?.message ?? maybeAxios.message ?? fallback;
 }
 
 function createDemoDetections(width: number, height: number): Detection[] {
