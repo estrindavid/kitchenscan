@@ -31,7 +31,7 @@ const files = [
 
 const sourceExpectations = [
   ['welcome intro carousel', 'app/onboarding/welcome.tsx', 'SLIDES'],
-  ['reduced motion wrapper', 'components/brand/motion.ts', 'useReducedMotion'],
+  ['reduced motion wrapper', 'components/brand/motion.ts', 'isReduceMotionEnabled'],
   ['memphis background', 'components/brand/MemphisBackground.tsx', 'preserveAspectRatio'],
   ['recipe match badge', 'components/recipes/RecipeCard.tsx', 'matchBadge'],
   ['cook completion state', 'app/cook/[id].tsx', 'completionContainer'],

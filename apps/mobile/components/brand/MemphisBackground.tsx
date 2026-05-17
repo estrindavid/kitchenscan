@@ -1,5 +1,4 @@
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Animated, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect } from 'react-native-svg';
 import { brandColors } from '../ui/theme';
 import { useFloatingStyle } from './motion';

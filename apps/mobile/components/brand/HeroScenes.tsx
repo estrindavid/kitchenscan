@@ -1,5 +1,4 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Animated, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { brandColors, radii, spacing } from '../ui/theme';
 import { FoodIcon, type FoodIconType } from './FoodIcon';

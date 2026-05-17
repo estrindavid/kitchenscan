@@ -1,16 +1,5 @@
-import { useEffect } from 'react';
-import type { ViewStyle } from 'react-native';
-import {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { AccessibilityInfo, Animated, Easing, type ViewStyle } from 'react-native';
 import { motion } from '../ui/theme';
 
 type FloatingOptions = {
@@ -47,36 +36,60 @@ export function useFloatingStyle({
   rotateDegree = 0,
   disabled = false,
 }: FloatingOptions = {}) {
-  const reducedMotion = useReducedMotion();
-  const progress = useSharedValue(0);
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (disabled || reducedMotion) {
-      progress.value = 0;
-      return;
-    }
+    let animation: Animated.CompositeAnimation | null = null;
+    let cancelled = false;
 
-    progress.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: duration / 2, easing: brandMotion.loopEasing }),
-          withTiming(0, { duration: duration / 2, easing: brandMotion.loopEasing }),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, [delay, disabled, distance, duration, progress, reducedMotion, rotateDegree]);
+    AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+      if (cancelled || disabled || reduceMotion) {
+        progress.setValue(0);
+        return;
+      }
 
-  return useAnimatedStyle<ViewStyle>(() => {
-    const translateY = interpolate(progress.value, [0, 1], [0, -distance]);
-    const rotate = interpolate(progress.value, [0, 1], [0, rotateDegree]);
+      animation = Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(progress, {
+            toValue: 1,
+            duration: duration / 2,
+            easing: brandMotion.loopEasing,
+            useNativeDriver: true,
+          }),
+          Animated.timing(progress, {
+            toValue: 0,
+            duration: duration / 2,
+            easing: brandMotion.loopEasing,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      animation.start();
+    });
 
-    return {
-      transform: [{ translateY }, { rotate: `${rotate}deg` }],
+    return () => {
+      cancelled = true;
+      animation?.stop();
     };
-  });
+  }, [delay, disabled, duration, progress]);
+
+  return {
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -distance],
+        }),
+      },
+      {
+        rotate: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', `${rotateDegree}deg`],
+        }),
+      },
+    ],
+  } satisfies Animated.WithAnimatedObject<ViewStyle>;
 }
 
 export function usePopInStyle({
@@ -85,26 +98,51 @@ export function usePopInStyle({
   duration = motion.slow,
   disabled = false,
 }: PopInOptions = {}) {
-  const reducedMotion = useReducedMotion();
-  const progress = useSharedValue(disabled || reducedMotion ? 1 : 0);
+  const progress = useRef(new Animated.Value(disabled ? 1 : 0)).current;
 
   useEffect(() => {
-    if (disabled || reducedMotion) {
-      progress.value = 1;
-      return;
-    }
+    let animation: Animated.CompositeAnimation | null = null;
+    let cancelled = false;
 
-    progress.value = withDelay(
-      delay,
-      withTiming(1, { duration, easing: brandMotion.easing }),
-    );
-  }, [delay, disabled, distance, duration, progress, reducedMotion]);
+    AccessibilityInfo.isReduceMotionEnabled().then((reduceMotion) => {
+      if (cancelled || disabled || reduceMotion) {
+        progress.setValue(1);
+        return;
+      }
 
-  return useAnimatedStyle<ViewStyle>(() => ({
-    opacity: progress.value,
+      animation = Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(progress, {
+          toValue: 1,
+          duration,
+          easing: brandMotion.easing,
+          useNativeDriver: true,
+        }),
+      ]);
+      animation.start();
+    });
+
+    return () => {
+      cancelled = true;
+      animation?.stop();
+    };
+  }, [delay, disabled, duration, progress]);
+
+  return {
+    opacity: progress,
     transform: [
-      { translateY: interpolate(progress.value, [0, 1], [distance, 0]) },
-      { scale: interpolate(progress.value, [0, 1], [0.96, 1]) },
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [distance, 0],
+        }),
+      },
+      {
+        scale: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.96, 1],
+        }),
+      },
     ],
-  }));
+  } satisfies Animated.WithAnimatedObject<ViewStyle>;
 }

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Animated from 'react-native-reanimated';
 import {
   MemphisBackground,
   PantryShelfScene,
