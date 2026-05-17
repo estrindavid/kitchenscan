@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { BrandPanel, FoodIcon, MemphisBackground } from '../../components/brand';
 import { Button, Typography } from '../../components/ui';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { usePrefsStore } from '../../stores/prefsStore';
 import type { DietaryRestriction } from '@kitchenscan/shared';
 
@@ -41,53 +44,88 @@ export default function DietScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Typography variant="h1">Any dietary restrictions?</Typography>
-      <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
-        Select all that apply. We'll filter recipes accordingly.
-      </Typography>
-      <ScrollView contentContainerStyle={styles.grid} style={styles.scroll}>
-        {DIET_OPTIONS.map(({ id, label, emoji }) => {
-          const isSelected = selected.has(id);
-          return (
-            <Pressable
-              key={id}
-              onPress={() => toggle(id)}
-              style={[styles.chip, isSelected && styles.chipSelected]}
-            >
-              <Text style={styles.chipEmoji}>{emoji}</Text>
-              <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-      <View style={styles.footer}>
-        <Button label="Skip" variant="ghost" onPress={handleNext} />
-        <Button label="Next" onPress={handleNext} />
-      </View>
+    <View style={styles.root}>
+      <MemphisBackground variant="cream" density="medium" />
+      <SafeAreaView style={styles.container}>
+        <BrandPanel tone="peach" style={styles.hero}>
+          <View style={styles.heroCopy}>
+            <Text style={styles.stepLabel}>Step 1 of 2</Text>
+            <Typography variant="h1" color={brandColors.ink}>Any food rules?</Typography>
+            <Typography variant="body" color={brandColors.ink} style={styles.subtitle}>
+              Pick what matters so recipes stay useful when the clock is loud.
+            </Typography>
+          </View>
+          <View style={styles.heroIcons}>
+            <FoodIcon type="broccoli" size={58} />
+            <FoodIcon type="milk" size={52} />
+          </View>
+        </BrandPanel>
+
+        <ScrollView contentContainerStyle={styles.grid} style={styles.scroll} showsVerticalScrollIndicator={false}>
+          {DIET_OPTIONS.map(({ id, label, emoji }) => {
+            const isSelected = selected.has(id);
+            return (
+              <Pressable
+                key={id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => toggle(id)}
+                style={[styles.chip, isSelected && styles.chipSelected]}
+              >
+                <Text style={styles.chipEmoji}>{emoji}</Text>
+                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                  {label}
+                </Text>
+                {isSelected ? <Ionicons name="checkmark-circle" size={18} color={brandColors.ink} /> : null}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+        <View style={styles.footer}>
+          <Button label="Skip" variant="ghost" onPress={handleNext} />
+          <Button label="Next" onPress={handleNext} icon={<Ionicons name="arrow-forward" size={18} color="#FFFFFF" />} />
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 60, backgroundColor: colors.background },
-  subtitle: { marginTop: spacing.sm, marginBottom: spacing['3xl'] },
+  root: { flex: 1, backgroundColor: brandColors.cream },
+  container: { flex: 1, paddingHorizontal: spacing.xl },
+  hero: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+    padding: spacing.xl,
+    flexDirection: 'row',
+    minHeight: 172,
+  },
+  heroCopy: { flex: 1, justifyContent: 'center' },
+  heroIcons: { justifyContent: 'center', alignItems: 'center', gap: spacing.xs },
+  stepLabel: {
+    color: brandColors.ink,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+  },
+  subtitle: { marginTop: spacing.sm },
   scroll: { flex: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: spacing.xl },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 10, paddingHorizontal: 16,
-    borderRadius: radii.full, borderWidth: 1, borderColor: colors.border,
-    backgroundColor: colors.surface,
+    paddingVertical: 11, paddingHorizontal: 15,
+    borderRadius: radii.md, borderWidth: 2, borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  chipSelected: { backgroundColor: brandColors.mint },
   chipEmoji: { fontSize: 18 },
-  chipLabel: { fontSize: 14, fontWeight: '500', color: colors.text },
-  chipLabelSelected: { color: colors.primary },
+  chipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  chipLabelSelected: { color: brandColors.ink },
   footer: {
     flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 20, borderTopWidth: 1, borderTopColor: colors.border,
+    paddingVertical: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border,
+    backgroundColor: brandColors.cream,
   },
 });

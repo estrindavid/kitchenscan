@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { BrandPanel, FoodIcon, MemphisBackground } from '../../components/brand';
 import { Button, Typography, Input } from '../../components/ui';
-import { colors, spacing, radii } from '../../components/ui/theme';
+import { brandColors, colors, spacing, radii } from '../../components/ui/theme';
 import { usePrefsStore } from '../../stores/prefsStore';
 import type { SkillLevel } from '@kitchenscan/shared';
 
@@ -54,79 +57,119 @@ export default function PreferencesScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Typography variant="h1">Almost done!</Typography>
+    <View style={styles.root}>
+      <MemphisBackground variant="sky" density="medium" />
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <BrandPanel tone="sky" style={styles.hero}>
+            <View style={styles.heroCopy}>
+              <Text style={styles.stepLabel}>Step 2 of 2</Text>
+              <Typography variant="h1" color={brandColors.ink}>Make it yours.</Typography>
+              <Typography variant="body" color={brandColors.ink} style={styles.heroBody}>
+                Tune the recipe brain around how you actually cook.
+              </Typography>
+            </View>
+            <FoodIcon type="pasta" size={72} />
+          </BrandPanel>
 
-      <View style={styles.section}>
-        <Typography variant="h3">Cooking Skill Level</Typography>
-        {SKILL_LEVELS.map((level) => {
-          const isSelected = skill === level.key;
-          return (
-            <Pressable
-              key={level.key}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSkill(level.key);
-              }}
-              style={[styles.option, isSelected && styles.optionSelected]}
-            >
-              <Text style={styles.optionEmoji}>{level.emoji}</Text>
-              <View style={styles.optionText}>
-                <Text style={[styles.optionTitle, isSelected && styles.optionTitleSelected]}>
-                  {level.label}
-                </Text>
-                <Text style={styles.optionDesc}>{level.desc}</Text>
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
+          <View style={styles.section}>
+            <Typography variant="h3" color={brandColors.ink}>Cooking Skill Level</Typography>
+            {SKILL_LEVELS.map((level) => {
+              const isSelected = skill === level.key;
+              return (
+                <Pressable
+                  key={level.key}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSkill(level.key);
+                  }}
+                  style={[styles.option, isSelected && styles.optionSelected]}
+                >
+                  <Text style={styles.optionEmoji}>{level.emoji}</Text>
+                  <View style={styles.optionText}>
+                    <Text style={[styles.optionTitle, isSelected && styles.optionTitleSelected]}>
+                      {level.label}
+                    </Text>
+                    <Text style={styles.optionDesc}>{level.desc}</Text>
+                  </View>
+                  {isSelected ? <Ionicons name="checkmark-circle" size={22} color={brandColors.ink} /> : null}
+                </Pressable>
+              );
+            })}
+          </View>
 
-      <View style={styles.section}>
-        <Typography variant="h3">Favorite Cuisines</Typography>
-        <Typography variant="caption" color={colors.textSecondary}>
-          We'll prioritize these in recipe suggestions
-        </Typography>
-        <View style={styles.chipGrid}>
-          {CUISINE_OPTIONS.map(({ id, label, emoji }) => {
-            const isSelected = cuisines.has(id);
-            return (
-              <Pressable
-                key={id}
-                onPress={() => toggleCuisine(id)}
-                style={[styles.chip, isSelected && styles.chipSelected]}
-              >
-                <Text style={styles.chipEmoji}>{emoji}</Text>
-                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+          <View style={styles.section}>
+            <Typography variant="h3" color={brandColors.ink}>Favorite Cuisines</Typography>
+            <Typography variant="caption" color={colors.textSecondary}>
+              We'll prioritize these in recipe suggestions.
+            </Typography>
+            <View style={styles.chipGrid}>
+              {CUISINE_OPTIONS.map(({ id, label, emoji }) => {
+                const isSelected = cuisines.has(id);
+                return (
+                  <Pressable
+                    key={id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    onPress={() => toggleCuisine(id)}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                  >
+                    <Text style={styles.chipEmoji}>{emoji}</Text>
+                    <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
-      <Input
-        label="Household Size"
-        value={household}
-        onChangeText={setHousehold}
-        keyboardType="number-pad"
-        placeholder="1"
-      />
+          <View style={styles.inputPanel}>
+            <Input
+              label="Household Size"
+              value={household}
+              onChangeText={setHousehold}
+              keyboardType="number-pad"
+              placeholder="1"
+            />
+          </View>
 
-      <Button
-        label="Start Cooking"
-        onPress={handleFinish}
-        fullWidth
-        size="lg"
-      />
-    </ScrollView>
+          <Button
+            label="Start Cooking"
+            onPress={handleFinish}
+            fullWidth
+            size="lg"
+            icon={<Ionicons name="restaurant" size={18} color="#FFFFFF" />}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing['3xl'], gap: spacing.xl },
+  root: { flex: 1, backgroundColor: brandColors.sky },
+  safeArea: { flex: 1 },
+  container: { flex: 1 },
+  content: { padding: spacing.xl, gap: spacing.xl },
+  hero: {
+    minHeight: 178,
+    padding: spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heroCopy: { flex: 1 },
+  stepLabel: {
+    color: brandColors.ink,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+  },
+  heroBody: { marginTop: spacing.sm },
   section: { gap: spacing.sm },
   option: {
     flexDirection: 'row',
@@ -134,28 +177,34 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
   optionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: brandColors.peachLight,
   },
   optionEmoji: { fontSize: 24 },
   optionText: { flex: 1 },
   optionTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
-  optionTitleSelected: { color: colors.primary },
+  optionTitleSelected: { color: brandColors.ink },
   optionDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 8, paddingHorizontal: 14,
-    borderRadius: radii.full, borderWidth: 1, borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderRadius: radii.md, borderWidth: 2, borderColor: brandColors.ink,
+    backgroundColor: brandColors.white,
   },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  chipSelected: { backgroundColor: brandColors.lemon },
   chipEmoji: { fontSize: 16 },
-  chipLabel: { fontSize: 13, fontWeight: '500', color: colors.text },
-  chipLabelSelected: { color: colors.primary },
+  chipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  chipLabelSelected: { color: brandColors.ink },
+  inputPanel: {
+    backgroundColor: brandColors.white,
+    borderRadius: radii.md,
+    borderWidth: 3,
+    borderColor: brandColors.ink,
+    padding: spacing.lg,
+  },
 });
