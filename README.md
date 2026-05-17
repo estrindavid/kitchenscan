@@ -17,7 +17,7 @@ People waste food because they forget what they own, do not know what to cook, o
 5. Open a recipe, cook through the steps, and mark used ingredients as used up.
 6. Open Profile to show readiness, validation metrics, feedback, and impact snapshot.
 
-## Hackathon Compliance
+## Hackathon
 
 - **RocketRide:** The API invokes RocketRide `.pipe` workflows for ingredient extraction and recipe generation.
 - **Google product:** Gemini on Google Cloud / Vertex AI powers image understanding and recipe generation through Application Default Credentials.
