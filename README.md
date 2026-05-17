@@ -41,6 +41,7 @@ Key paths:
 - `apps/api`: Fastify backend for detection, recipes, pantry sync, usage, feedback, and impact.
 - `pipelines/extract-ingredients.pipe`: RocketRide Gemini Vision workflow.
 - `pipelines/generate-recipes.pipe`: RocketRide Gemini recipe workflow.
+- `docs/ROCKETRIDE_EVIDENCE.md`: where judges can verify the RocketRide dependency, pipelines, and SDK invocation path.
 - `docs/HACKATHON_SUBMISSION.md`: form-ready submission copy and pitch script.
 - `docs/DEMO_SETUP.md`: exact setup checklist.
 
@@ -75,6 +76,7 @@ Verify the connected demo:
 
 ```bash
 pnpm demo:check
+pnpm rocketride:evidence
 pnpm typecheck
 pnpm --filter @kitchenscan/api test
 ```
@@ -85,3 +87,4 @@ See [docs/DEMO_SETUP.md](docs/DEMO_SETUP.md) for the full live-demo checklist.
 
 - Repo: https://github.com/estrindavid/kitchenscan
 - Submission packet: [docs/HACKATHON_SUBMISSION.md](docs/HACKATHON_SUBMISSION.md)
+- RocketRide evidence: [docs/ROCKETRIDE_EVIDENCE.md](docs/ROCKETRIDE_EVIDENCE.md)

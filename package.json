@@ -8,6 +8,7 @@
     "dev:mobile": "pnpm --filter @kitchenscan/mobile start",
     "demo:check": "node scripts/check-demo-readiness.mjs",
     "demo:check:mobile": "node scripts/check-mobile-redesign.mjs",
+    "rocketride:evidence": "node scripts/check-rocketride-evidence.mjs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",

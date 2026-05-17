@@ -6,6 +6,7 @@ Use this checklist before presenting.
 
 - Repo: https://github.com/estrindavid/kitchenscan
 - Form-ready copy: [docs/HACKATHON_SUBMISSION.md](HACKATHON_SUBMISSION.md)
+- RocketRide proof: [docs/ROCKETRIDE_EVIDENCE.md](ROCKETRIDE_EVIDENCE.md)
 - Required judging story: scan food, confirm pantry, generate recipes, cook, mark used-up items, show impact metrics.
 
 ## 1. Add Required Keys
@@ -39,10 +40,11 @@ Do not commit real keys.
 
 ```bash
 pnpm --filter @kitchenscan/api check:rocketride
+pnpm rocketride:evidence
 pnpm demo:check
 ```
 
-Expected: `"ok": true` from the RocketRide check and `Ready for the connected demo.` from the readiness check.
+Expected: `"ok": true` from the RocketRide check, RocketRide evidence present, and `Ready for the connected demo.` from the readiness check.
 
 ## 3. Start The Demo
 
@@ -109,7 +111,8 @@ Before submitting:
 2. Confirm `.env` is not committed.
 3. Confirm `README.md` explains RocketRide and Google Cloud usage.
 4. Confirm `docs/HACKATHON_SUBMISSION.md` has the project summary and pitch script.
-5. Confirm the demo video starts on the welcome screen and shows the live AI path.
+5. Run `pnpm rocketride:evidence`.
+6. Confirm the demo video starts on the welcome screen and shows the live AI path.
 
 ## Backup Plan
 

@@ -16,6 +16,8 @@
 
 **Demo setup:** `docs/DEMO_SETUP.md`
 
+**RocketRide evidence:** `docs/ROCKETRIDE_EVIDENCE.md`
+
 ## Built With
 
 - Expo / React Native mobile app
@@ -33,6 +35,8 @@
 - `pipelines/generate-recipes.pipe`: pantry-to-recipes workflow using Gemini.
 
 The API attempts RocketRide first through the RocketRide TypeScript SDK, then uses direct Vertex AI Gemini fallback to keep the live demo resilient while still preserving the RocketRide workflow path.
+
+To verify this in the repo, run `pnpm rocketride:evidence`.
 
 **Google product:** Gemini on Google Cloud / Vertex AI is the core AI layer for both multimodal ingredient extraction and structured recipe generation. The demo uses Google Cloud ADC and the credited hackathon project.
 
