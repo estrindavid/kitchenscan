@@ -94,6 +94,8 @@ const PIPELINE_NAME = 'generate-recipes.pipe';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const DEFAULT_ROCKETRIDE_RECIPE_TIMEOUT_MS = 3500;
 const DEFAULT_GEMINI_RECIPE_TIMEOUT_MS = 28000;
+const DEFAULT_GEMINI_RECIPE_MAX_OUTPUT_TOKENS = 8192;
+const DEFAULT_GEMINI_RECIPE_THINKING_BUDGET = 0;
 const DEFAULT_PIPELINE: RecipePipelineMetadata = {
   provider: 'RocketRide + Gemini',
   name: PIPELINE_NAME,
@@ -282,8 +284,17 @@ async function executeGeminiRecipeGeneration(input: GenerateRecipesInput): Promi
       ],
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.45,
-        maxOutputTokens: 2048,
+        temperature: 0.3,
+        maxOutputTokens: getPositiveIntEnv(
+          'GEMINI_RECIPE_MAX_OUTPUT_TOKENS',
+          DEFAULT_GEMINI_RECIPE_MAX_OUTPUT_TOKENS,
+        ),
+        thinkingConfig: {
+          thinkingBudget: getNonNegativeIntEnv(
+            'GEMINI_RECIPE_THINKING_BUDGET',
+            DEFAULT_GEMINI_RECIPE_THINKING_BUDGET,
+          ),
+        },
       },
     }, 'Recipe generation', getPositiveIntEnv('GEMINI_RECIPE_TIMEOUT_MS', DEFAULT_GEMINI_RECIPE_TIMEOUT_MS));
 
@@ -418,6 +429,13 @@ function getPositiveIntEnv(name: string, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function getNonNegativeIntEnv(name: string, fallback: number) {
+  const value = process.env[name];
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 function buildRecipePrompt(input: GenerateRecipesInput) {
   return [
     'Generate 3 practical recipes from this pantry.',
@@ -426,6 +444,7 @@ function buildRecipePrompt(input: GenerateRecipesInput) {
     input.maxCookTime ? `Maximum total time: ${input.maxCookTime} minutes` : '',
     input.cuisineType ? `Cuisine preference: ${input.cuisineType}` : '',
     input.difficulty ? `Skill level: ${input.difficulty}` : '',
+    'Keep every field concise so the JSON finishes completely.',
     'Return only JSON with this exact shape:',
     '{"recipes":[{"title":"string","description":"string","servings":2,"difficulty":"beginner|intermediate|advanced","cuisineType":"string","mealType":"string","prepTimeMinutes":5,"cookTimeMinutes":15,"totalTimeMinutes":20,"dietaryTags":[],"allergenWarnings":[],"ingredients":[{"name":"string","displayText":"string","optional":false,"garnish":false,"category":"string"}],"steps":["string"]}]}',
   ].filter(Boolean).join('\n');
