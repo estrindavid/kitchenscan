@@ -31,7 +31,8 @@ export default function RecipesScreen() {
   const [hasRequestedRecipes, setHasRequestedRecipes] = useState(false);
 
   const { data: pantryItems = [], isLoading: isPantryLoading } = usePantryItems();
-  const ingredientNames = pantryItems.map((item) => item.name);
+  const activePantryItems = pantryItems.filter((item) => item.status !== 'used_up');
+  const ingredientNames = activePantryItems.map((item) => item.name);
 
   const {
     data,
@@ -55,7 +56,10 @@ export default function RecipesScreen() {
 
   const handleFindRecipes = () => {
     if (ingredientNames.length === 0) return;
-    setHasRequestedRecipes(true);
+    if (!hasRequestedRecipes) {
+      setHasRequestedRecipes(true);
+      return;
+    }
     void refetch();
   };
 
@@ -67,8 +71,8 @@ export default function RecipesScreen() {
           eyebrow="Cook what you own"
           title="Recipes"
           subtitle={
-            pantryItems.length > 0
-              ? `Matched to ${pantryItems.length} pantry item${pantryItems.length === 1 ? '' : 's'}`
+            activePantryItems.length > 0
+              ? `Matched to ${activePantryItems.length} pantry item${activePantryItems.length === 1 ? '' : 's'}`
               : 'Add items to your pantry to get matches'
           }
           accent="lemon"
@@ -83,10 +87,11 @@ export default function RecipesScreen() {
           <Ionicons name="search" size={17} color={colors.textTertiary} />
           <TextInput
             style={styles.cuisineInput}
-            placeholder="Cuisine (e.g. Italian)"
+            placeholder="Optional cuisine preference"
             placeholderTextColor={colors.textTertiary}
             value={cuisineFilter}
             onChangeText={setCuisineFilter}
+            returnKeyType="done"
           />
         </View>
 
@@ -132,15 +137,6 @@ export default function RecipesScreen() {
           })}
         </View>
 
-        <Button
-          label={isRecipesLoading ? 'Finding recipes...' : 'Find me recipes'}
-          onPress={handleFindRecipes}
-          fullWidth
-          size="lg"
-          loading={isRecipesLoading}
-          disabled={isPantryLoading || ingredientNames.length === 0 || isRecipesLoading}
-          icon={<Ionicons name="sparkles" size={18} color="#FFFFFF" />}
-        />
       </View>
 
       {/* Content */}
@@ -154,12 +150,14 @@ export default function RecipesScreen() {
             {errorMessage}
           </Typography>
         </View>
-      ) : pantryItems.length === 0 ? (
+      ) : activePantryItems.length === 0 ? (
         <View style={styles.emptyPanel}>
           <EmptyState
             icon="🍽️"
-            title="Your pantry is empty"
-            subtitle="Scan food items or add them manually to see matching recipes."
+            title={pantryItems.length > 0 ? 'No active pantry items' : 'Your pantry is empty'}
+            subtitle={pantryItems.length > 0
+              ? 'Restore or scan fresh items to find recipes.'
+              : 'Scan food items or add them manually to see matching recipes.'}
             titleColor={brandColors.ink}
             subtitleColor={colors.text}
           />
@@ -198,6 +196,18 @@ export default function RecipesScreen() {
           }
         />
       )}
+
+      <View style={styles.bottomBar}>
+        <Button
+          label={isRecipesLoading ? 'Finding recipes...' : 'Find me recipes'}
+          onPress={handleFindRecipes}
+          fullWidth
+          size="lg"
+          loading={isRecipesLoading}
+          disabled={isPantryLoading || ingredientNames.length === 0 || isRecipesLoading}
+          icon={<Ionicons name="sparkles" size={18} color="#FFFFFF" />}
+        />
+      </View>
     </View>
   );
 }
@@ -267,6 +277,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: spacing.lg,
+    paddingBottom: 112,
     gap: spacing.md,
   },
   resultCount: {
@@ -282,10 +293,19 @@ const styles = StyleSheet.create({
   emptyPanel: {
     flex: 1,
     margin: spacing.lg,
+    marginBottom: 112,
     borderRadius: radii.lg,
     backgroundColor: 'rgba(255,255,255,0.82)',
     borderWidth: 2,
     borderColor: 'rgba(16,22,47,0.12)',
     overflow: 'hidden',
+  },
+  bottomBar: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing['2xl'],
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderTopWidth: 2,
+    borderTopColor: brandColors.ink,
   },
 });

@@ -253,7 +253,8 @@ export async function generateRecipes(input: GenerateRecipesInput): Promise<Gene
     ? normalizeGeneratedRecipes(generatedRecipes, pantry, pipeline)
     : buildFallbackRecipes(pantry);
   const filtered = applyFilters(recipes, input);
-  const paginated = filtered.slice(input.offset, input.offset + input.limit);
+  const displayRecipes = filtered.length > 0 ? filtered : recipes;
+  const paginated = displayRecipes.slice(input.offset, input.offset + input.limit);
 
   for (const recipe of paginated) {
     recipeStore.set(recipe.id, recipe);
@@ -261,7 +262,7 @@ export async function generateRecipes(input: GenerateRecipesInput): Promise<Gene
 
   return {
     recipes: paginated,
-    total: filtered.length,
+    total: displayRecipes.length,
     offset: input.offset,
     limit: input.limit,
     pipeline,
@@ -340,7 +341,7 @@ function normalizeSteps(steps: GeneratedRecipe['steps'], title: string): RecipeS
 function applyFilters(recipes: RecipeDetail[], input: GenerateRecipesInput) {
   return recipes.filter((recipe) => {
     if (input.difficulty && recipe.difficulty !== normalizeDifficulty(input.difficulty)) return false;
-    if (input.cuisineType && recipe.cuisineType?.toLowerCase() !== input.cuisineType.toLowerCase()) return false;
+    if (input.cuisineType && !cuisineMatches(recipe.cuisineType, input.cuisineType)) return false;
     if (input.maxCookTime && recipe.totalTimeMinutes && recipe.totalTimeMinutes > input.maxCookTime) return false;
     if (input.dietary?.length) {
       const tags = new Set(recipe.dietaryTags.map((tag) => tag.toLowerCase()));
@@ -348,6 +349,13 @@ function applyFilters(recipes: RecipeDetail[], input: GenerateRecipesInput) {
     }
     return true;
   });
+}
+
+function cuisineMatches(recipeCuisine: string | undefined, preference: string) {
+  if (!recipeCuisine) return false;
+  const recipe = recipeCuisine.toLowerCase();
+  const preferred = preference.toLowerCase();
+  return recipe === preferred || recipe.includes(preferred) || preferred.includes(recipe);
 }
 
 function getPipelinePath() {

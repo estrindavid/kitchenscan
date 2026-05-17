@@ -76,6 +76,23 @@ describe('recipe generation routes', () => {
     expect(detailBody.data.steps.length).toBeGreaterThan(0);
   });
 
+  it('still returns recipes when a cuisine preference does not exactly match generated cuisine labels', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/recipes/search?ingredients=tomatoes,eggs,milk&cuisineType=Italian&limit=3',
+    });
+    const body = JSON.parse(res.body) as {
+      data: {
+        recipes: Array<{ id: string; title: string }>;
+        total: number;
+      };
+    };
+
+    expect(res.statusCode).toBe(200);
+    expect(body.data.recipes.length).toBeGreaterThan(0);
+    expect(body.data.total).toBeGreaterThan(0);
+  });
+
   it('requires at least one ingredient for recipe search', async () => {
     const res = await app.inject({
       method: 'GET',

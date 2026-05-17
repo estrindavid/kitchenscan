@@ -75,8 +75,9 @@ function computeLocalMatches(
   if (filters.difficulty) {
     results = results.filter((r) => r.difficulty === filters.difficulty);
   }
-  if (filters.cuisineType) {
-    results = results.filter((r) => r.cuisineType === filters.cuisineType);
+  const cuisinePreference = filters.cuisineType;
+  if (cuisinePreference) {
+    results = results.filter((r) => cuisineMatches(r.cuisineType, cuisinePreference));
   }
   if (filters.maxCookTime) {
     results = results.filter((r) => !r.totalTimeMinutes || r.totalTimeMinutes <= filters.maxCookTime!);
@@ -86,9 +87,45 @@ function computeLocalMatches(
 
   const offset = filters.offset ?? 0;
   const limit = filters.limit ?? 20;
-  const paginated = results.slice(offset, offset + limit);
+  const displayResults = results.length > 0 ? results : SEED_RECIPES.map((recipe) => {
+    const nonGarnish = recipe.ingredients.filter((i) => !i.isGarnish);
+    const matched = nonGarnish.filter((i) => pantrySet.has(i.canonicalName.toLowerCase()));
+    const missing = nonGarnish.filter((i) => !pantrySet.has(i.canonicalName.toLowerCase()));
+    const total = nonGarnish.length || 1;
+    const matchScore = Math.round((matched.length / total) * 100);
 
-  return { recipes: paginated, total: results.length, offset, limit };
+    return {
+      id: recipe.id,
+      title: recipe.title,
+      description: recipe.description,
+      imageUrl: recipe.imageUrl,
+      cookTimeMinutes: recipe.cookTimeMinutes,
+      prepTimeMinutes: recipe.prepTimeMinutes,
+      totalTimeMinutes: recipe.totalTimeMinutes,
+      servings: recipe.servings,
+      difficulty: recipe.difficulty,
+      cuisineType: recipe.cuisineType,
+      mealType: recipe.mealType,
+      dietaryTags: recipe.dietaryTags,
+      allergenWarnings: recipe.allergenWarnings,
+      matchScore,
+      matchedIngredients: matched.map((i) => i.canonicalName),
+      missingIngredients: missing.map((i) => ({ name: i.canonicalName, isOptional: i.isOptional })),
+      totalIngredients: total,
+      substituteCount: 0,
+    };
+  }).sort((a, b) => b.matchScore - a.matchScore);
+
+  const paginated = displayResults.slice(offset, offset + limit);
+
+  return { recipes: paginated, total: displayResults.length, offset, limit };
+}
+
+function cuisineMatches(recipeCuisine: string | undefined, preference: string) {
+  if (!recipeCuisine) return false;
+  const recipe = recipeCuisine.toLowerCase();
+  const preferred = preference.toLowerCase();
+  return recipe === preferred || recipe.includes(preferred) || preferred.includes(recipe);
 }
 
 function getRecipeSearchErrorMessage(error: unknown) {
