@@ -1,49 +1,74 @@
 # KitchenScan
 
-KitchenScan is an AI pantry assistant for students and busy households: scan the food already in your kitchen, confirm a smart pantry, then generate recipes that use what you have before it goes bad.
+**Scan your fridge. Know what you can cook.**
 
-Built for the Build with AI two-day hackathon by GDG Newport Beach x RocketRide.
+KitchenScan turns photos of your fridge or pantry into an AI pantry, then recommends recipes from food you already own.
 
-## Why It Matters
+Built in a few hours at a Google hackathon.
 
-People waste food because they forget what they own, do not know what to cook, or buy ingredients they already had. KitchenScan turns a fridge or pantry photo into immediate cooking options, helping users save money, reduce food waste, and make dinner decisions faster.
+## Why
+
+Recipe apps usually start with a shopping list.
+
+KitchenScan starts with what is already in your kitchen.
+
+Open the app, scan your food, confirm what it found, and ask for recipes that match your actual pantry. The goal is simple: make the "what can I cook right now?" moment less annoying.
+
+## What It Does
+
+- Scans fridge, pantry, freezer, or counter photos
+- Detects visible ingredients with AI
+- Lets you review and save a clean pantry
+- Generates recipes from active pantry items
+- Opens recipe details and step-by-step cook mode
+- Marks used ingredients as used up after cooking
+- Shows lightweight impact and validation metrics
 
 ## Demo Flow
 
-1. Open the Expo app. It starts on the animated welcome screen for recording.
-2. Scan fridge, pantry, freezer, or counter ingredients.
-3. Review the detected ingredients and save them to the pantry.
-4. Tap **Find me recipes** to generate meals from the active pantry.
-5. Open a recipe, cook through the steps, and mark used ingredients as used up.
-6. Open Profile to show readiness, validation metrics, feedback, and impact snapshot.
-
-## Hackathon
-
-- **RocketRide:** The API invokes RocketRide `.pipe` workflows for ingredient extraction and recipe generation.
-- **Google product:** Gemini on Google Cloud / Vertex AI powers image understanding and recipe generation through Application Default Credentials.
-- **Working prototype:** Expo mobile app plus Fastify API, pantry sync, recipe generation, cook mode, feedback, and impact metrics.
-- **Real problem:** Food waste, grocery cost, and kitchen decision fatigue.
-
-## Architecture
-
 ```text
-Expo app
-  -> Fastify API
-  -> RocketRide TypeScript SDK
-  -> pipelines/*.pipe
-  -> Gemini / Vertex AI
-  -> normalized pantry, recipes, metrics
+scan food -> confirm pantry -> find recipes -> cook -> update pantry
 ```
 
-Key paths:
+1. Start on the welcome screen.
+2. Take a photo of ingredients.
+3. Confirm detected items into the pantry.
+4. Tap **Find me recipes**.
+5. Open a recipe and cook through the steps.
+6. Mark used ingredients so the pantry stays accurate.
 
-- `apps/mobile`: Expo app for scanning, pantry, recipes, cook mode, and profile metrics.
-- `apps/api`: Fastify backend for detection, recipes, pantry sync, usage, feedback, and impact.
-- `pipelines/extract-ingredients.pipe`: RocketRide Gemini Vision workflow.
-- `pipelines/generate-recipes.pipe`: RocketRide Gemini recipe workflow.
-- `docs/ROCKETRIDE_EVIDENCE.md`: where judges can verify the RocketRide dependency, pipelines, and SDK invocation path.
-- `docs/HACKATHON_SUBMISSION.md`: form-ready submission copy and pitch script.
-- `docs/DEMO_SETUP.md`: exact setup checklist.
+## Screens
+
+The app includes:
+
+- Animated onboarding
+- Camera scan flow
+- Pantry manager
+- AI recipe feed
+- Recipe detail and cook mode
+- Profile dashboard for readiness, feedback, and impact
+
+## Tech Stack
+
+- **Mobile:** Expo, React Native, Expo Router
+- **API:** Fastify, TypeScript, Zod
+- **AI:** Gemini / Vertex AI
+- **Workflow:** RocketRide `.pipe` pipelines
+- **State:** TanStack Query, Zustand, AsyncStorage
+- **Tooling:** pnpm, Turbo, Vitest
+
+## Project Structure
+
+```text
+apps/
+  mobile/      Expo app
+  api/         Fastify API
+packages/
+  shared/      Shared TypeScript types
+pipelines/     RocketRide workflows
+docs/          Demo and submission notes
+scripts/       Readiness checks
+```
 
 ## Quick Start
 
@@ -53,38 +78,40 @@ Install dependencies:
 pnpm install
 ```
 
-Create `.env` from `.env.example`, then configure RocketRide and Google Cloud ADC:
+Create an environment file:
 
 ```bash
 cp .env.example .env
-bash <(curl -sSL https://storage.googleapis.com/cloud-samples-data/adc/setup_adc.sh)
 ```
 
 Start the API:
 
 ```bash
-pnpm --filter @kitchenscan/api dev
+pnpm dev:api
 ```
 
-Start Expo:
+Start the mobile app:
 
 ```bash
 pnpm --filter @kitchenscan/mobile exec expo start --lan --port 8082
 ```
 
-Verify the connected demo:
+Run checks:
 
 ```bash
-pnpm demo:check
-pnpm rocketride:evidence
 pnpm typecheck
 pnpm --filter @kitchenscan/api test
+pnpm demo:check
 ```
 
-See [docs/DEMO_SETUP.md](docs/DEMO_SETUP.md) for the full live-demo checklist.
+## Notes
 
-## Submission Links
+- The live demo uses a local API on port `3001`.
+- Google Cloud / Vertex AI is used for Gemini access.
+- RocketRide pipeline files live in [`pipelines/`](pipelines/).
+- Detailed setup lives in [`docs/DEMO_SETUP.md`](docs/DEMO_SETUP.md).
+
+## Links
 
 - Repo: https://github.com/estrindavid/kitchenscan
-- Submission packet: [docs/HACKATHON_SUBMISSION.md](docs/HACKATHON_SUBMISSION.md)
-- RocketRide evidence: [docs/ROCKETRIDE_EVIDENCE.md](docs/ROCKETRIDE_EVIDENCE.md)
+- Submission notes: [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md)
